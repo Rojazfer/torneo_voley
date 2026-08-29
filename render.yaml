@@ -6,7 +6,6 @@ services:
   - type: web
     name: torneo-voley-api
     runtime: python
-    plan: free
     rootDir: backend
     buildCommand: bash build.sh
     startCommand: gunicorn config.wsgi:application
@@ -33,7 +32,6 @@ services:
   - type: web
     name: torneo-voley-frontend
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
