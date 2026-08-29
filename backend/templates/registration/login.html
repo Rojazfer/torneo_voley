@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Login | AYACUCHO{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-md-5">
+        <div class="card p-4">
+            <div class="text-center mb-4">
+                <img class="hero-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23ff2a2a'/%3E%3Cstop offset='1' stop-color='%238c0d0d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='none' stroke='none'%3E%3Cpath d='M130 270c40-110 130-170 220-180l20 70c-60 12-100 42-140 95l-100 15zm160 46l60-86 118-18 77 29 136 46-50 114-94 53-144 6-110-54-33-90 40-21z' fill='url(%23g1)'/%3E%3Cpath d='M440 135l-64 90 80 42 54-57-70-75zm204 110l61 80-51 120-94 38-50-105 78-54 56-79zm-283 116l57 97-118 22-57-84 118-35zm-50 134l98 38 128 20-14 70-234-43-34-91z' fill='%23ffb000' opacity='.8'/%3E%3Ccircle cx='425' cy='430' r='155' fill='%231a1a1a'/%3E%3Ccircle cx='425' cy='430' r='118' fill='%23f1f1f1'/%3E%3Cpath d='M325 370c45-63 95-94 160-94 54 0 96 23 130 68-55 19-95 55-118 98-28-18-64-30-109-30-27 0-45 3-63 10-11-18-20-31-27-52z' fill='%238b8b8b' opacity='.55'/%3E%3Cg stroke='%230a0a0a' stroke-width='18' stroke-linecap='round'%3E%3Cpath d='M382 284l-12 87m78-94l-17 97m94-70l-49 72'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E" alt="Logo AYACUCHO" style="max-width: 240px;">
+            </div>
+            <h2 class="text-center mb-4">AYACUCHO</h2>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.errors %}
+                    <div class="alert alert-danger">Usuario o contraseña incorrectos.</div>
+                {% endif %}
+                <div class="mb-3">
+                    <label for="id_username" class="form-label">Usuario</label>
+                    <input type="text" name="username" class="form-control" id="id_username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="id_password" class="form-label">Contraseña</label>
+                    <input type="password" name="password" class="form-control" id="id_password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

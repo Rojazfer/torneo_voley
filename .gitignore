@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.python314embed/
+*.sqlite3
+db.sqlite3
+/package-lock.json
+
+# Django/runtime
+staticfiles/
+media/*
+backend/media/*
+!backend/media/README.md
+!media/README.md
+*.log
+
+# Node/Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Local installers and archives
+python-*.exe
+python-*.zip
+python-install.log
+
+# Editor/system
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store

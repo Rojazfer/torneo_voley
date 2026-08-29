@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Buscar | AYACUCHO{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+    <h2 class="mb-4">Buscar jugadores</h2>
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-10">
+            <input type="text" name="q" class="form-control" value="{{ q }}" placeholder="Buscar por nombre, apellido o documento">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Buscar</button>
+        </div>
+    </form>
+
+    {% if q %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Equipo</th>
+                    <th>Torneo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for jugador in resultados %}
+                <tr>
+                    <td>{{ jugador.nombre_completo }}</td>
+                    <td>{{ jugador.documento }}</td>
+                    <td>{{ jugador.equipo }}</td>
+                    <td>{{ jugador.torneo }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center small-muted">No se encontraron resultados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

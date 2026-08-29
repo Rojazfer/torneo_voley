@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Jugadores | AYACUCHO{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Jugadores</h2>
+        <a href="{% url 'jugador_nuevo' %}" class="btn btn-primary">Nuevo jugador</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Equipo</th>
+                    <th>Torneo</th>
+                    <th>Credencial</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for jugador in jugadores %}
+                <tr>
+                    <td>{{ jugador.nombre_completo }}</td>
+                    <td>{{ jugador.documento }}</td>
+                    <td>{{ jugador.equipo }}</td>
+                    <td>{{ jugador.torneo }}</td>
+                    <td>
+                        <a href="{% url 'generar_credencial' jugador.pk %}" class="btn btn-sm btn-outline-light">Generar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center small-muted">No hay jugadores registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

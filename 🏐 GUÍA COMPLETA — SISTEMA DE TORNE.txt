@@ -1,0 +1,753 @@
+🏐 GUÍA COMPLETA — SISTEMA DE TORNEOS DE VÓLEIBOL
+1. 🎯 Objetivo principal
+
+El sistema permitirá administrar un campeonato de vóleibol desde la inscripción de equipos hasta la generación de credenciales, fixture y tabla de posiciones.
+
+El núcleo será:
+
+Registrar equipos → registrar jugadores → aprobar inscripción → generar credenciales → generar fixture → registrar resultados → actualizar puntos → mostrar información a los equipos.
+
+2. 👥 Roles del sistema
+
+Inicialmente tendremos solamente 2 roles.
+
+👑 ADMINISTRADOR
+
+Tiene control completo.
+
+Puede:
+
+Crear campeonatos.
+Crear categorías.
+Configurar ramas.
+Registrar equipos.
+Revisar inscripciones.
+Aprobar/rechazar equipos.
+Administrar jugadores.
+Habilitar jugadores.
+Generar fixture.
+Registrar partidos.
+Registrar resultados.
+Registrar sets.
+Consultar tabla de posiciones.
+Generar credenciales.
+Descargar/imprimir credenciales.
+Administrar usuarios.
+👤 DELEGADO
+
+Cada delegado tendrá acceso únicamente a la información de su equipo.
+
+Puede:
+
+Crear su cuenta.
+Registrar su equipo.
+Registrar jugadores.
+Subir fotografías.
+Enviar inscripción.
+Consultar estado de inscripción.
+Ver jugadores.
+Ver credenciales.
+Ver fixture.
+Ver resultados.
+Ver tabla de posiciones.
+Ver posición de su equipo.
+
+No puede:
+
+Modificar resultados.
+Modificar puntos.
+Crear partidos.
+Aprobar equipos.
+Modificar otros equipos.
+3. 🔐 Módulo de cuentas
+
+Este módulo ya lo estamos construyendo.
+
+Usuario
+Usuario
+├── username
+├── nombres
+├── apellidos
+├── email
+├── teléfono
+├── contraseña
+├── foto
+├── rol
+├── activo
+└── fecha_registro
+Roles
+ADMIN
+DELEGADO
+Autenticación
+
+Utilizaremos:
+
+JWT
+
+Flujo:
+
+Usuario
+   ↓
+username + contraseña
+   ↓
+Django
+   ↓
+JWT
+   ├── Access Token
+   └── Refresh Token
+4. 🏆 Módulo de campeonatos
+
+El administrador podrá crear un campeonato.
+
+Ejemplo:
+
+CAMPEONATO DE VÓLEIBOL 2026
+
+
+Nombre:
+Campeonato Intercolegial 2026
+
+
+Fecha inicio:
+22/08/2026
+
+
+Fecha final:
+30/08/2026
+
+
+Lugar:
+Coliseo Municipal
+
+
+Estado:
+ACTIVO
+Estados
+BORRADOR
+INSCRIPCIONES
+EN CURSO
+FINALIZADO
+CANCELADO
+5. 🏐 Categorías
+
+Un campeonato puede tener diferentes categorías.
+
+Por ejemplo:
+
+Campeonato 2026
+│
+├── Mayores Masculino
+├── Mayores Femenino
+├── Sub-18 Masculino
+└── Sub-18 Femenino
+
+Pero para nuestra V1 podemos empezar incluso con una sola categoría y luego agregar más.
+
+Cada categoría tendrá:
+
+Nombre.
+Rama.
+Edad mínima/máxima, si corresponde.
+Cantidad máxima de equipos.
+Cantidad máxima de jugadores.
+Estado.
+6. 👥 Módulo de equipos
+
+Este es uno de los módulos principales del sistema.
+
+El delegado registra:
+
+Nombre del equipo
+Nombre de la institución
+Logo
+Categoría
+Rama
+Delegado
+Teléfono
+
+Ejemplo:
+
+🏐 DEPORTIVO CENTRAL
+
+
+Categoría:
+Mayores Masculino
+
+
+Delegado:
+Carlos Pérez
+
+
+Teléfono:
+7XXXXXXX
+
+
+Estado:
+PENDIENTE
+7. 🧑‍🤝‍🧑 Módulo de jugadores
+
+Cada equipo tendrá jugadores.
+
+Ejemplo:
+
+DEPORTIVO CENTRAL
+
+
+01 — Juan Pérez       Líbero
+05 — Carlos Rojas     Central
+07 — Luis Fernández   Armador
+10 — Miguel Vargas    Punta
+12 — Pedro López      Opuesto
+
+Datos:
+
+Nombre.
+Apellido.
+CI.
+Fecha de nacimiento.
+Fotografía.
+Número de camiseta.
+Posición.
+Estado.
+Equipo.
+Posiciones
+
+Inicialmente:
+
+Armador.
+Opuesto.
+Central.
+Punta/Receptor.
+Líbero.
+8. 📝 Módulo de inscripción
+
+Este módulo controla el proceso formal.
+
+Flujo
+DELEGADO
+   ↓
+Registra equipo
+   ↓
+Registra jugadores
+   ↓
+Envía inscripción
+   ↓
+🟡 PENDIENTE
+   ↓
+ADMINISTRADOR
+   ├── ❌ RECHAZAR
+   └── ✅ APROBAR
+              ↓
+          🟢 APROBADO
+Estados
+BORRADOR
+PENDIENTE
+OBSERVADO
+APROBADO
+RECHAZADO
+
+Esto nos permitirá incluso devolver una inscripción con una observación.
+
+Ejemplo:
+
+⚠️ Falta fotografía del jugador #10.
+
+9. 🪪 Módulo de credenciales
+
+Este será uno de los dos grandes objetivos del sistema.
+
+Cuando un equipo sea aprobado:
+
+Equipo aprobado
+      ↓
+Jugadores habilitados
+      ↓
+Generar credenciales
+      ↓
+PDF
+      ↓
+Imprimir
+
+Cada credencial tendrá:
+
+┌──────────────────────────┐
+│   CAMPEONATO 2026        │
+│                          │
+│        [ FOTO ]          │
+│                          │
+│     JUAN PÉREZ           │
+│                          │
+│       JUGADOR            │
+│                          │
+│ Equipo: Central          │
+│ N.º: 10                  │
+│ Posición: Punta          │
+│ Categoría: Mayores       │
+│                          │
+│          [ QR ]          │
+│                          │
+└──────────────────────────┘
+QR
+
+Cada credencial tendrá un identificador único.
+
+Ejemplo:
+
+CV26-000001
+
+El QR permitirá posteriormente validar:
+
+🟢 CREDENCIAL VÁLIDA
+
+
+Juan Pérez
+Deportivo Central
+Jugador
+N.º 10
+Mayores Masculino
+10. 📅 Módulo de fixture
+
+Este será el segundo gran componente del sistema.
+
+El administrador podrá generar los partidos.
+
+Por ejemplo:
+
+FECHA 1
+
+
+22/08/2026
+
+
+15:00
+Central vs Universitario
+
+
+17:00
+Nacional vs San Martín
+
+El delegado verá solamente los partidos relacionados con su equipo, además del fixture general si decidimos publicarlo.
+
+11. 🏐 Módulo de partidos
+
+Cada partido tendrá:
+
+Partido
+├── Campeonato
+├── Categoría
+├── Fecha
+├── Hora
+├── Lugar
+├── Equipo A
+├── Equipo B
+├── Estado
+└── Resultado
+
+Estados:
+
+PROGRAMADO
+EN CURSO
+FINALIZADO
+SUSPENDIDO
+CANCELADO
+12. 🏐 Registro de sets
+
+Esto es fundamental porque estamos haciendo un sistema específico para vóleibol.
+
+Ejemplo:
+
+Central vs Universitario
+
+
+Set 1
+25 - 20
+
+
+Set 2
+23 - 25
+
+
+Set 3
+25 - 18
+
+
+Set 4
+25 - 21
+
+Resultado:
+
+Central        3
+Universitario  1
+
+El sistema calculará automáticamente el ganador.
+
+13. 📊 Tabla de posiciones
+
+El sistema calculará automáticamente:
+
+Partidos jugados.
+Partidos ganados.
+Partidos perdidos.
+Sets ganados.
+Sets perdidos.
+Diferencia/cociente de sets según reglamento.
+Puntos.
+Posición.
+
+Ejemplo:
+
+Pos	Equipo	PJ	PG	PP	SF	SC	PTS
+1	Central	4	4	0	12	2	12
+2	Universitario	4	3	1	10	5	9
+3	Nacional	4	2	2	8	8	6
+4	San Martín	4	1	3	5	10	3
+
+Y muy importante:
+
+⚙️ La puntuación debe ser configurable
+
+No vamos a "quemar" una regla en el código.
+
+El administrador podrá configurar posteriormente algo como:
+
+Victoria 3-0 → 3 puntos
+Victoria 3-1 → 3 puntos
+Victoria 3-2 → 2 puntos
+Derrota 2-3 → 1 punto
+Derrota 0-3 → 0 puntos
+
+Así podemos adaptarnos al reglamento utilizado.
+
+14. 📱 Panel del delegado
+
+Este será probablemente el panel más utilizado por los equipos.
+
+Al entrar:
+
+┌─────────────────────────────────────┐
+│ 🏐 MI EQUIPO                        │
+├─────────────────────────────────────┤
+│                                     │
+│ DEPORTIVO CENTRAL                   │
+│ Mayores Masculino                   │
+│                                     │
+│ 🥈 Posición: 2                     │
+│ ⭐ Puntos: 9                        │
+│ 🏐 Partidos: 4                     │
+│ ✅ Victorias: 3                    │
+│ ❌ Derrotas: 1                     │
+│                                     │
+├─────────────────────────────────────┤
+│ 📅 PRÓXIMO PARTIDO                  │
+│                                     │
+│ Central                             │
+│       VS                            │
+│ Universitario                       │
+│                                     │
+│ 22 AGO · 15:00                      │
+│ Coliseo Municipal                   │
+│                                     │
+│ [VER FIXTURE]                       │
+│ [VER POSICIONES]                    │
+│ [MIS JUGADORES]                     │
+│ [CREDENCIALES]                      │
+└─────────────────────────────────────┘
+15. 🏠 Dashboard del administrador
+
+El administrador tendrá algo diferente:
+
+┌─────────────────────────────────────────┐
+│ 🏐 TORNEO VOLEY                         │
+├─────────────────────────────────────────┤
+│                                         │
+│ Campeonatos activos          1          │
+│ Equipos registrados         12          │
+│ Jugadores                  168          │
+│ Partidos programados        30          │
+│                                         │
+├─────────────────────────────────────────┤
+│ INSCRIPCIONES PENDIENTES                │
+│                                         │
+│ Deportivo Central       🟡 Pendiente    │
+│ San Martín              🟡 Pendiente    │
+│                                         │
+│ [REVISAR]                               │
+└─────────────────────────────────────────┘
+16. 🌐 Información pública
+
+Aunque el sistema tendrá autenticación, recomiendo que algunas cosas sean públicas.
+
+Por ejemplo:
+
+/torneo/2026
+
+Podría mostrar:
+
+🏆 Campeonato de Vóleibol 2026
+Equipos.
+Fixture.
+Resultados.
+Tabla de posiciones.
+Próximos partidos.
+
+Esto permitirá que jugadores, padres, espectadores y organizadores consulten el campeonato sin tener una cuenta.
+
+17. 🗄️ Base de datos inicial
+
+Nuestra base de datos no será enorme.
+
+Las entidades principales serían:
+
+Usuario
+   │
+   └── Equipo
+          │
+          ├── Jugadores
+          │
+          └── Inscripción
+
+
+Campeonato
+   │
+   └── Categoría
+          │
+          ├── Equipos
+          │
+          └── Partidos
+                  │
+                  └── Sets
+
+Más adelante:
+
+Credencial
+QR
+18. 📦 Módulos Django
+
+Para la V1 propongo:
+
+backend/
+│
+├── config/
+│
+├── cuentas/
+│       └── Usuarios y autenticación
+│
+├── campeonatos/
+│       └── Campeonatos y categorías
+│
+├── equipos/
+│       └── Equipos
+│
+├── jugadores/
+│       └── Jugadores
+│
+├── inscripciones/
+│       └── Inscripciones
+│
+├── partidos/
+│       └── Fixture, partidos y sets
+│
+└── credenciales/
+        └── Credenciales y QR
+
+No necesitamos más aplicaciones inicialmente.
+
+19. ⚛️ Estructura del Frontend
+
+En React:
+
+frontend/
+└── src/
+    │
+    ├── components/
+    │
+    ├── layouts/
+    │
+    ├── pages/
+    │   ├── auth/
+    │   ├── admin/
+    │   └── delegado/
+    │
+    ├── services/
+    │
+    ├── hooks/
+    │
+    ├── context/
+    │
+    ├── routes/
+    │
+    ├── utils/
+    │
+    └── assets/
+20. 🖥️ Pantallas principales
+Públicas
+Inicio
+Campeonatos
+Detalle campeonato
+Fixture
+Resultados
+Tabla de posiciones
+Validar credencial
+Login
+Administrador
+Dashboard
+Campeonatos
+Categorías
+Equipos
+Jugadores
+Inscripciones
+Fixture
+Partidos
+Resultados
+Posiciones
+Credenciales
+Usuarios
+Delegado
+Dashboard
+Mi equipo
+Mis jugadores
+Inscripción
+Fixture
+Resultados
+Posiciones
+Mis credenciales
+Perfil
+21. 🔐 Seguridad
+
+Desde el principio tendremos:
+
+JWT
+│
+├── Access Token
+└── Refresh Token
+
+Y permisos:
+
+ADMIN
+│
+└── acceso administrativo
+
+
+DELEGADO
+│
+└── acceso únicamente a su información
+
+Esto es especialmente importante:
+
+Un delegado no debe poder modificar la información de otro equipo simplemente cambiando un ID en la URL.
+
+La API deberá verificar que el recurso realmente pertenece al usuario autenticado.
+
+22. 🛠️ Tecnologías definitivas
+
+Nuestro stack queda:
+
+Backend
+Python 3.14
+Django 6.0.7
+Django REST Framework
+Simple JWT
+Pillow
+QRCode
+Frontend
+React
+Vite
+Tailwind CSS
+Base de datos
+
+Desarrollo:
+
+SQLite
+
+Producción:
+
+PostgreSQL
+23. 🚦 Qué NO vamos a hacer todavía
+
+Para mantener el sistema pequeño, dejamos fuera de la V1:
+
+❌ Pagos online
+❌ WhatsApp automático
+❌ IA
+❌ Estadísticas avanzadas de jugadores
+❌ Streaming
+❌ Aplicación Android/iOS independiente
+❌ Árbitros como usuarios
+❌ Mesa técnica como usuarios
+❌ Ranking histórico
+❌ Múltiples organizaciones
+❌ Sistema financiero
+❌ Notificaciones complejas
+
+Todo eso puede convertirse posteriormente en V2/V3.
+
+🏁 24. Plan de desarrollo
+
+Ahora que tenemos el mapa completo, yo seguiría este orden:
+
+FASE 1
+🔐 CUENTAS
+   ├── Usuario
+   ├── Roles
+   ├── JWT
+   ├── Login
+   └── Perfil
+        ↓
+FASE 2
+🏆 CAMPEONATOS
+   ├── Campeonato
+   └── Categoría
+        ↓
+FASE 3
+👥 EQUIPOS
+   ├── Registro
+   └── Delegado
+        ↓
+FASE 4
+🧑‍🤝‍🧑 JUGADORES
+   ├── Registro
+   ├── Foto
+   ├── Posición
+   └── Número
+        ↓
+FASE 5
+📝 INSCRIPCIONES
+   ├── Solicitud
+   ├── Revisión
+   ├── Aprobación
+   └── Habilitación
+        ↓
+FASE 6
+📅 FIXTURE
+   ├── Generación
+   ├── Partidos
+   └── Calendario
+        ↓
+FASE 7
+🏐 RESULTADOS
+   ├── Sets
+   ├── Ganador
+   └── Puntuación
+        ↓
+FASE 8
+📊 POSICIONES
+   ├── Tabla
+   └── Clasificación
+        ↓
+FASE 9
+🪪 CREDENCIALES
+   ├── Diseño
+   ├── QR
+   ├── PDF
+   └── Validación
+        ↓
+FASE 10
+⚛️ FRONTEND
+   ├── Admin
+   ├── Delegado
+   └── Público
+🎯 La V1 que realmente queremos
+
+Si resumimos todo el sistema en una sola frase, sería:
+
+Un administrador crea el campeonato, los delegados registran sus equipos y jugadores, el administrador aprueba las inscripciones y genera las credenciales, luego administra el fixture y resultados, mientras cada equipo puede consultar sus partidos, resultados, puntos y posición.

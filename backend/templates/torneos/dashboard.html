@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}AYACUCHO | Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <img class="hero-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23ff2a2a'/%3E%3Cstop offset='1' stop-color='%238c0d0d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='none' stroke='none'%3E%3Cpath d='M130 270c40-110 130-170 220-180l20 70c-60 12-100 42-140 95l-100 15zm160 46l60-86 118-18 77 29 136 46-50 114-94 53-144 6-110-54-33-90 40-21z' fill='url(%23g1)'/%3E%3Cpath d='M440 135l-64 90 80 42 54-57-70-75zm204 110l61 80-51 120-94 38-50-105 78-54 56-79zm-283 116l57 97-118 22-57-84 118-35zm-50 134l98 38 128 20-14 70-234-43-34-91z' fill='%23ffb000' opacity='.8'/%3E%3Ccircle cx='425' cy='430' r='155' fill='%231a1a1a'/%3E%3Ccircle cx='425' cy='430' r='118' fill='%23f1f1f1'/%3E%3Cpath d='M325 370c45-63 95-94 160-94 54 0 96 23 130 68-55 19-95 55-118 98-28-18-64-30-109-30-27 0-45 3-63 10-11-18-20-31-27-52z' fill='%238b8b8b' opacity='.55'/%3E%3Cg stroke='%230a0a0a' stroke-width='18' stroke-linecap='round'%3E%3Cpath d='M382 284l-12 87m78-94l-17 97m94-70l-49 72'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E" alt="Logo AYACUCHO">
+            <h1 class="display-5 fw-bold text-uppercase">AYACUCHO</h1>
+            <p class="lead small-muted">Club de Voleibol · Sistema de gestión y credenciales</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="stats-box h-100">
+                <div class="small-muted text-uppercase">Torneos</div>
+                <div class="display-6 fw-bold mt-2">{{ torneos }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-box h-100">
+                <div class="small-muted text-uppercase">Equipos</div>
+                <div class="display-6 fw-bold mt-2">{{ equipos }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-box h-100">
+                <div class="small-muted text-uppercase">Jugadores</div>
+                <div class="display-6 fw-bold mt-2">{{ jugadores }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-box h-100">
+                <div class="small-muted text-uppercase">Credenciales</div>
+                <div class="display-6 fw-bold mt-2">{{ credenciales }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0">Torneos recientes</h3>
+                    <a href="{% url 'torneo_nuevo' %}" class="btn btn-primary">Nuevo torneo</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Fechas</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for torneo in torneos_recientes %}
+                            <tr>
+                                <td><a href="{% url 'torneo_detalle' torneo.pk %}" class="text-white text-decoration-none">{{ torneo.nombre }}</a></td>
+                                <td>{{ torneo.categoria }}</td>
+                                <td>{{ torneo.fecha_inicio }} - {{ torneo.fecha_fin }}</td>
+                                <td><span class="badge bg-danger">{{ torneo.get_estado_display }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center small-muted">No hay torneos cargados todavía.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card p-4 h-100">
+                <h3>Acciones rápidas</h3>
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'torneo_nuevo' %}" class="btn btn-primary">Crear torneo</a>
+                    <a href="{% url 'equipo_nuevo' %}" class="btn btn-outline-light">Registrar equipo</a>
+                    <a href="{% url 'jugador_nuevo' %}" class="btn btn-outline-light">Registrar jugador</a>
+                    <a href="{% url 'credenciales_list' %}" class="btn btn-outline-light">Ver credenciales</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

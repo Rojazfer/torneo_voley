@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Torneos | AYACUCHO{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Torneos</h2>
+        <a href="{% url 'torneo_nuevo' %}" class="btn btn-primary">Nuevo torneo</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Fecha</th>
+                    <th>Lugar</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for torneo in torneos %}
+                <tr>
+                    <td><a href="{% url 'torneo_detalle' torneo.pk %}" class="text-white text-decoration-none">{{ torneo.nombre }}</a></td>
+                    <td>{{ torneo.categoria }}</td>
+                    <td>{{ torneo.fecha_inicio }} / {{ torneo.fecha_fin }}</td>
+                    <td>{{ torneo.lugar }}</td>
+                    <td><span class="badge bg-danger">{{ torneo.get_estado_display }}</span></td>
+                    <td>
+                        <a href="{% url 'torneo_editar' torneo.pk %}" class="btn btn-sm btn-outline-light">Editar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center small-muted">Todavía no hay torneos registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

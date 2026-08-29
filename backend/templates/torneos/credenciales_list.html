@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Credenciales | AYACUCHO{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Credenciales</h2>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Tipo</th>
+                    <th>Jugador</th>
+                    <th>Torneo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for credencial in credenciales %}
+                <tr>
+                    <td>{{ credencial.codigo }}</td>
+                    <td>{{ credencial.get_tipo_display }}</td>
+                    <td>{{ credencial.jugador }}</td>
+                    <td>{{ credencial.torneo }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center small-muted">No hay credenciales generadas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
