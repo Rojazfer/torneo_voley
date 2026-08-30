@@ -83,12 +83,10 @@ AUTH_USER_MODEL = 'cuentas.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
-
-    # CORS
-    'corsheaders.middleware.CorsMiddleware',
 
     'django.middleware.common.CommonMiddleware',
 
@@ -252,7 +250,13 @@ CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         'CORS_ALLOWED_ORIGINS',
-        'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000',
+        (
+            'http://localhost:5173,'
+            'http://127.0.0.1:5173,'
+            'http://localhost:3000,'
+            'http://127.0.0.1:3000,'
+            'https://torneo-voley-frontend.onrender.com'
+        ),
     ).split(',')
     if origin.strip()
 ]
@@ -261,7 +265,10 @@ CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', str(DEBUG)).lo
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
-    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+    for origin in os.environ.get(
+        'CSRF_TRUSTED_ORIGINS',
+        'https://torneo-voley-frontend.onrender.com',
+    ).split(',')
     if origin.strip()
 ]
 
