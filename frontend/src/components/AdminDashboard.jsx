@@ -105,7 +105,9 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [torneoForm, setTorneoForm] = useState(initialTorneo);
+  const [editingTorneoId, setEditingTorneoId] = useState(null);
   const [equipoForm, setEquipoForm] = useState(initialEquipo);
+  const [editingEquipoId, setEditingEquipoId] = useState(null);
   const [jugadorForm, setJugadorForm] = useState(initialJugador);
   const [credencialForm, setCredencialForm] = useState(initialCredencial);
   const [jugadorFotoNombre, setJugadorFotoNombre] = useState('');
@@ -116,6 +118,13 @@ export default function AdminDashboard() {
   const [editingUsuarioId, setEditingUsuarioId] = useState(null);
   const [fixtureForm, setFixtureForm] = useState(initialFixture);
   const [resultadoForm, setResultadoForm] = useState(initialResultado);
+  const [editingPartidoId, setEditingPartidoId] = useState(null);
+  const [partidoForm, setPartidoForm] = useState({
+    fecha: '',
+    hora: '',
+    lugar: '',
+    estado: 'PROGRAMADO',
+  });
 
   const torneoById = useMemo(() => {
     return Object.fromEntries(torneos.map((torneo) => [String(torneo.id), torneo]));
@@ -226,6 +235,131 @@ export default function AdminDashboard() {
   const setQuickSection = (section) => {
     setActiveMenu(section);
     setNotice('');
+  };
+
+  const handleSaveTorneo = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+    setNotice('');
+
+    try {
+      if (editingTorneoId) {
+        await api.updateTorneo(editingTorneoId, torneoForm);
+        setNotice('Campeonato actualizado correctamente.');
+      } else {
+        await api.createTorneo(torneoForm);
+        setNotice('Campeonato creado correctamente.');
+      }
+
+      setTorneoForm(initialTorneo);
+      setEditingTorneoId(null);
+      await refreshData();
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'No se pudo guardar el campeonato.'));
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditTorneo = (torneo) => {
+    setActiveMenu('campeonatos');
+    setEditingTorneoId(torneo.id);
+    setTorneoForm({
+      nombre: torneo.nombre || '',
+      categoria: torneo.categoria || 'Senior',
+      fecha_inicio: torneo.fecha_inicio || '',
+      fecha_fin: torneo.fecha_fin || '',
+      lugar: torneo.lugar || '',
+      descripcion: torneo.descripcion || '',
+      estado: torneo.estado || 'PROGRAMADO',
+    });
+    setError('');
+    setNotice('');
+  };
+
+  const cancelEditTorneo = () => {
+    setEditingTorneoId(null);
+    setTorneoForm(initialTorneo);
+  };
+
+  const handleDeleteTorneo = async (torneo) => {
+    if (!window.confirm(`Eliminar el campeonato "${torneo.nombre}"? Tambien se eliminaran sus equipos, jugadores, partidos y credenciales relacionados si el backend lo permite.`)) return;
+
+    setError('');
+    setNotice('');
+    try {
+      await api.deleteTorneo(torneo.id);
+      if (editingTorneoId === torneo.id) cancelEditTorneo();
+      await refreshData();
+      setNotice('Campeonato eliminado correctamente.');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'No se pudo eliminar el campeonato.'));
+      console.error(err);
+    }
+  };
+
+  const handleSaveEquipo = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+    setNotice('');
+
+    try {
+      if (editingEquipoId) {
+        await api.updateEquipo(editingEquipoId, equipoForm);
+        setNotice('Equipo actualizado correctamente.');
+      } else {
+        await api.createEquipo(equipoForm);
+        setNotice('Equipo creado correctamente.');
+      }
+
+      setEquipoForm(initialEquipo);
+      setEditingEquipoId(null);
+      await refreshData();
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'No se pudo guardar el equipo.'));
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditEquipo = (equipo) => {
+    setActiveMenu('equipos');
+    setEditingEquipoId(equipo.id);
+    setEquipoForm({
+      nombre: equipo.nombre || '',
+      categoria: equipo.categoria || 'Masculino',
+      color_principal: equipo.color_principal || 'Rojo',
+      torneo: equipo.torneo || '',
+    });
+    setSelectedEquipoDetalle(String(equipo.id));
+    setError('');
+    setNotice('');
+  };
+
+  const cancelEditEquipo = () => {
+    setEditingEquipoId(null);
+    setEquipoForm(initialEquipo);
+  };
+
+  const handleDeleteEquipo = async (equipo) => {
+    if (!window.confirm(`Eliminar el equipo "${equipo.nombre}"? Tambien se quitaran sus jugadores y datos relacionados si el backend lo permite.`)) return;
+
+    setError('');
+    setNotice('');
+    try {
+      await api.deleteEquipo(equipo.id);
+      if (editingEquipoId === equipo.id) cancelEditEquipo();
+      if (selectedEquipoDetalle === String(equipo.id)) setSelectedEquipoDetalle('');
+      await refreshData();
+      setNotice('Equipo eliminado correctamente.');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'No se pudo eliminar el equipo.'));
+      console.error(err);
+    }
   };
 
   const handleGenerateTeamCredentials = async (equipoId) => {
@@ -375,6 +509,97 @@ export default function AdminDashboard() {
       setError('No se pudo eliminar el usuario.');
       console.error(err);
     }
+  };
+
+  const handleEditPartido = (partido) => {
+    setActiveMenu('partidos');
+    setEditingPartidoId(partido.id);
+    setPartidoForm({
+      fecha: partido.fecha || '',
+      hora: formatTime(partido.hora),
+      lugar: partido.lugar || '',
+      estado: partido.estado || 'PROGRAMADO',
+    });
+    setError('');
+    setNotice('');
+  };
+
+  const cancelEditPartido = () => {
+    setEditingPartidoId(null);
+    setPartidoForm({
+      fecha: '',
+      hora: '',
+      lugar: '',
+      estado: 'PROGRAMADO',
+    });
+  };
+
+  const handleSavePartido = async (event) => {
+    event.preventDefault();
+    if (!editingPartidoId) return;
+
+    setSaving(true);
+    setError('');
+    setNotice('');
+
+    try {
+      await api.updatePartido(editingPartidoId, partidoForm);
+      cancelEditPartido();
+      await refreshData();
+      setNotice('Partido actualizado correctamente.');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'No se pudo actualizar el partido.'));
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeletePartido = async (partido) => {
+    if (!window.confirm(`Eliminar ${partido.equipo_local_nombre} vs ${partido.equipo_visitante_nombre}?`)) return;
+
+    setError('');
+    setNotice('');
+    try {
+      await api.deletePartido(partido.id);
+      if (editingPartidoId === partido.id) cancelEditPartido();
+      await refreshData();
+      setNotice('Partido eliminado correctamente.');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'No se pudo eliminar el partido.'));
+      console.error(err);
+    }
+  };
+
+  const handleDeleteCredencial = async (credencial) => {
+    if (!window.confirm(`Eliminar la credencial ${credencial.codigo}?`)) return;
+
+    setError('');
+    setNotice('');
+    try {
+      await api.deleteCredencial(credencial.id);
+      await refreshData();
+      setNotice('Credencial eliminada correctamente.');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'No se pudo eliminar la credencial.'));
+      console.error(err);
+    }
+  };
+
+  const openTorneoEquipos = (torneoId) => {
+    const firstEquipo = equipos.find((equipo) => String(equipo.torneo) === String(torneoId));
+    setSelectedEquipoDetalle(firstEquipo ? String(firstEquipo.id) : '');
+    setQuickSection('equipos');
+  };
+
+  const openTorneoFixture = (torneo) => {
+    setFixtureForm({
+      ...fixtureForm,
+      torneo: String(torneo.id),
+      fecha_inicio: torneo.fecha_inicio || fixtureForm.fecha_inicio,
+      lugar: torneo.lugar || fixtureForm.lugar,
+    });
+    setQuickSection('fixture');
   };
 
   const handleGenerarFixture = async (event) => {
@@ -576,7 +801,7 @@ export default function AdminDashboard() {
               <Panel title="Campeonatos" subtitle="Crea y revisa los torneos registrados.">
                 <form
                   className="dashboard-form"
-                  onSubmit={(event) => handleSave(event, api.createTorneo, torneoForm, () => setTorneoForm(initialTorneo), 'Campeonato creado correctamente.')}
+                  onSubmit={handleSaveTorneo}
                 >
                   <input placeholder="Nombre" value={torneoForm.nombre} onChange={(e) => setTorneoForm({ ...torneoForm, nombre: e.target.value })} required />
                   <input placeholder="Categoria" value={torneoForm.categoria} onChange={(e) => setTorneoForm({ ...torneoForm, categoria: e.target.value })} required />
@@ -589,11 +814,31 @@ export default function AdminDashboard() {
                     <option value="FINALIZADO">Finalizado</option>
                   </select>
                   <textarea placeholder="Descripcion" value={torneoForm.descripcion} onChange={(e) => setTorneoForm({ ...torneoForm, descripcion: e.target.value })} />
-                  <button className="action-btn primary" disabled={saving}>Guardar campeonato</button>
+                  <button className="action-btn primary" disabled={saving}>
+                    {editingTorneoId ? 'Actualizar campeonato' : 'Guardar campeonato'}
+                  </button>
+                  {editingTorneoId && (
+                    <button className="action-btn" type="button" onClick={cancelEditTorneo}>
+                      Cancelar edicion
+                    </button>
+                  )}
                 </form>
                 <DataTable
-                  headers={['Nombre', 'Categoria', 'Inicio', 'Fin', 'Lugar', 'Estado']}
-                  rows={torneos.map((torneo) => [torneo.nombre, torneo.categoria, torneo.fecha_inicio, torneo.fecha_fin, torneo.lugar, torneo.estado])}
+                  headers={['Nombre', 'Categoria', 'Inicio', 'Fin', 'Lugar', 'Estado', 'Acciones']}
+                  rows={torneos.map((torneo) => [
+                    torneo.nombre,
+                    torneo.categoria,
+                    torneo.fecha_inicio,
+                    torneo.fecha_fin,
+                    torneo.lugar,
+                    torneo.estado,
+                    <div key={`torneo-${torneo.id}`} className="row-actions">
+                      <button type="button" onClick={() => handleEditTorneo(torneo)}>Editar</button>
+                      <button type="button" onClick={() => openTorneoEquipos(torneo.id)}>Equipos</button>
+                      <button type="button" onClick={() => openTorneoFixture(torneo)}>Fixture</button>
+                      <button type="button" className="danger" onClick={() => handleDeleteTorneo(torneo)}>Eliminar</button>
+                    </div>,
+                  ])}
                 />
               </Panel>
             )}
@@ -612,7 +857,7 @@ export default function AdminDashboard() {
               <Panel title="Equipos" subtitle="Registra equipos y asignales un campeonato.">
                 <form
                   className="dashboard-form"
-                  onSubmit={(event) => handleSave(event, api.createEquipo, equipoForm, () => setEquipoForm(initialEquipo), 'Equipo creado correctamente.')}
+                  onSubmit={handleSaveEquipo}
                 >
                   <input placeholder="Nombre del equipo" value={equipoForm.nombre} onChange={(e) => setEquipoForm({ ...equipoForm, nombre: e.target.value })} required />
                   <input placeholder="Categoria" value={equipoForm.categoria} onChange={(e) => setEquipoForm({ ...equipoForm, categoria: e.target.value })} required />
@@ -621,7 +866,14 @@ export default function AdminDashboard() {
                     <option value="">Seleccionar torneo</option>
                     {torneos.map((torneo) => <option key={torneo.id} value={torneo.id}>{torneo.nombre}</option>)}
                   </select>
-                  <button className="action-btn primary" disabled={saving}>Guardar equipo</button>
+                  <button className="action-btn primary" disabled={saving}>
+                    {editingEquipoId ? 'Actualizar equipo' : 'Guardar equipo'}
+                  </button>
+                  {editingEquipoId && (
+                    <button className="action-btn" type="button" onClick={cancelEditEquipo}>
+                      Cancelar edicion
+                    </button>
+                  )}
                 </form>
                 <div className="team-list">
                   {equipos.length ? equipos.map((equipo) => {
@@ -638,8 +890,14 @@ export default function AdminDashboard() {
                           <button className="action-btn" type="button" onClick={() => setSelectedEquipoDetalle(String(equipo.id))}>
                             Ver jugadores
                           </button>
+                          <button className="action-btn" type="button" onClick={() => handleEditEquipo(equipo)}>
+                            Editar equipo
+                          </button>
                           <button className="action-btn primary" type="button" onClick={() => handleGenerateTeamCredentials(equipo.id)}>
                             Descargar credenciales
+                          </button>
+                          <button className="action-btn danger" type="button" onClick={() => handleDeleteEquipo(equipo)}>
+                            Eliminar equipo
                           </button>
                         </div>
                       </article>
@@ -724,7 +982,7 @@ export default function AdminDashboard() {
                   )}
                 </form>
                 <DataTable
-                  headers={['Jugador', 'Foto', 'Tipo', 'Documento', 'Posicion', 'Equipo', 'Activo']}
+                  headers={['Jugador', 'Foto', 'Tipo', 'Documento', 'Posicion', 'Equipo', 'Activo', 'Acciones']}
                   rows={jugadores.map((jugador) => [
                     `${jugador.nombre} ${jugador.apellido}`,
                     jugador.foto ? <img key={`foto-${jugador.id}`} className="player-thumb" src={getMediaUrl(jugador.foto)} alt={`${jugador.nombre} ${jugador.apellido}`} /> : '-',
@@ -733,6 +991,10 @@ export default function AdminDashboard() {
                     jugador.posicion,
                     equipoById[String(jugador.equipo)]?.nombre || 'Sin equipo',
                     jugador.activo ? 'Si' : 'No',
+                    <div key={`jugador-${jugador.id}`} className="row-actions">
+                      <button type="button" onClick={() => handleEditJugador(jugador)}>Editar</button>
+                      <button type="button" className="danger" onClick={() => handleDeleteJugador(jugador.id)}>Eliminar</button>
+                    </div>,
                   ])}
                 />
               </Panel>
@@ -741,11 +1003,20 @@ export default function AdminDashboard() {
             {activeMenu === 'inscripciones' && (
               <Panel title="Inscripciones" subtitle="Resumen de equipos inscritos por campeonato.">
                 <DataTable
-                  headers={['Campeonato', 'Equipos inscritos', 'Jugadores registrados', 'Estado']}
+                  headers={['Campeonato', 'Equipos inscritos', 'Jugadores registrados', 'Estado', 'Acciones']}
                   rows={torneos.map((torneo) => {
                     const torneoEquipos = equipos.filter((equipo) => String(equipo.torneo) === String(torneo.id));
                     const torneoJugadores = jugadores.filter((jugador) => String(jugador.torneo) === String(torneo.id));
-                    return [torneo.nombre, torneoEquipos.length, torneoJugadores.length, torneo.estado];
+                    return [
+                      torneo.nombre,
+                      torneoEquipos.length,
+                      torneoJugadores.length,
+                      torneo.estado,
+                      <div key={`inscripcion-${torneo.id}`} className="row-actions">
+                        <button type="button" onClick={() => openTorneoEquipos(torneo.id)}>Gestionar equipos</button>
+                        <button type="button" onClick={() => openTorneoFixture(torneo)}>Fixture</button>
+                      </div>,
+                    ];
                   })}
                 />
               </Panel>
@@ -825,7 +1096,7 @@ export default function AdminDashboard() {
                   </button>
                 </div>
                 <DataTable
-                  headers={['Orden', 'Ronda', 'Fecha', 'Hora', 'Lugar', 'Campeonato', 'Partido', 'Estado']}
+                  headers={['Orden', 'Ronda', 'Fecha', 'Hora', 'Lugar', 'Campeonato', 'Partido', 'Estado', 'Acciones']}
                   rows={fixturePartidos.map((partido) => [
                     `Partido ${partido.orden}`,
                     partido.ronda,
@@ -842,6 +1113,10 @@ export default function AdminDashboard() {
                     partido.torneo_nombre,
                     `${partido.equipo_local_nombre} vs ${partido.equipo_visitante_nombre}`,
                     partido.estado,
+                    <div key={`fixture-partido-${partido.id}`} className="row-actions">
+                      <button type="button" onClick={() => handleEditPartido(partido)}>Editar</button>
+                      <button type="button" className="danger" onClick={() => handleDeletePartido(partido)}>Eliminar</button>
+                    </div>,
                   ])}
                 />
               </Panel>
@@ -858,6 +1133,30 @@ export default function AdminDashboard() {
                     'Al guardar, el ganador suma 2 puntos y el perdedor suma 1 punto; PF y PC se calculan solos.',
                   ]}
                 />
+                {editingPartidoId && (
+                  <form className="dashboard-form compact-form" onSubmit={handleSavePartido}>
+                    <Field label="Fecha" help="Actualiza la jornada del partido.">
+                      <input type="date" value={partidoForm.fecha} onChange={(e) => setPartidoForm({ ...partidoForm, fecha: e.target.value })} required />
+                    </Field>
+                    <Field label="Hora" help="Hora programada del encuentro.">
+                      <input type="time" value={partidoForm.hora} onChange={(e) => setPartidoForm({ ...partidoForm, hora: e.target.value })} required />
+                    </Field>
+                    <Field label="Lugar" help="Cancha o coliseo.">
+                      <input placeholder="Cancha 1" value={partidoForm.lugar} onChange={(e) => setPartidoForm({ ...partidoForm, lugar: e.target.value })} required />
+                    </Field>
+                    <Field label="Estado" help="Controla si el partido sigue pendiente o ya concluyo.">
+                      <select value={partidoForm.estado} onChange={(e) => setPartidoForm({ ...partidoForm, estado: e.target.value })}>
+                        <option value="PROGRAMADO">Programado</option>
+                        <option value="EN_CURSO">En curso</option>
+                        <option value="FINALIZADO">Finalizado</option>
+                        <option value="SUSPENDIDO">Suspendido</option>
+                        <option value="CANCELADO">Cancelado</option>
+                      </select>
+                    </Field>
+                    <button className="action-btn primary" disabled={saving}>Actualizar partido</button>
+                    <button className="action-btn" type="button" onClick={cancelEditPartido}>Cancelar edicion</button>
+                  </form>
+                )}
                 <form className="dashboard-form" onSubmit={handleRegistrarResultado}>
                   <Field label="Partido jugado" help="El primer equipo es local; el segundo es visitante.">
                     <select value={resultadoForm.partido} onChange={(e) => setResultadoForm({ ...resultadoForm, partido: e.target.value })} required>
@@ -888,13 +1187,23 @@ export default function AdminDashboard() {
                   <button className="action-btn primary" disabled={saving}>Guardar resultado</button>
                 </form>
                 <DataTable
-                  headers={['Partido', 'Fecha', 'Resultado', 'Ganador', 'Puntos']}
+                  headers={['Partido', 'Fecha', 'Resultado', 'Ganador', 'Puntos', 'Acciones']}
                   rows={partidos.map((partido, index) => [
                     `Partido ${index + 1}`,
                     `${partido.fecha} ${formatTime(partido.hora)} - ${partido.lugar}`,
                     formatSets(partido),
                     partido.ganador_nombre || '-',
                     `${partido.equipo_local_nombre}: ${partido.puntos_local} / ${partido.equipo_visitante_nombre}: ${partido.puntos_visitante}`,
+                    <div key={`partido-${partido.id}`} className="row-actions">
+                      <button type="button" onClick={() => handleEditPartido(partido)}>Editar</button>
+                      <button type="button" onClick={() => {
+                        setResultadoForm({ ...resultadoForm, partido: String(partido.id) });
+                        setNotice('Partido seleccionado para cargar resultado.');
+                      }}>
+                        Resultado
+                      </button>
+                      <button type="button" className="danger" onClick={() => handleDeletePartido(partido)}>Eliminar</button>
+                    </div>,
                   ])}
                 />
               </Panel>
@@ -958,10 +1267,24 @@ export default function AdminDashboard() {
                   <button className="action-btn primary" disabled={saving}>Generar credencial</button>
                 </form>
                 <DataTable
-                  headers={['Codigo', 'Tipo', 'Campeonato', 'Jugador']}
+                  headers={['Codigo', 'Tipo', 'Campeonato', 'Jugador', 'Acciones']}
                   rows={credenciales.map((credencial) => {
                     const jugador = jugadores.find((item) => String(item.id) === String(credencial.jugador));
-                    return [credencial.codigo, credencial.tipo, torneoById[String(credencial.torneo)]?.nombre || 'Sin torneo', jugador ? `${jugador.nombre} ${jugador.apellido}` : 'General'];
+                    const equipo = jugador ? equipoById[String(jugador.equipo)] : null;
+                    return [
+                      credencial.codigo,
+                      credencial.tipo,
+                      torneoById[String(credencial.torneo)]?.nombre || 'Sin torneo',
+                      jugador ? `${jugador.nombre} ${jugador.apellido}` : 'General',
+                      <div key={`credencial-${credencial.id}`} className="row-actions">
+                        {equipo && (
+                          <button type="button" onClick={() => handleGenerateTeamCredentials(equipo.id)}>
+                            Reimprimir equipo
+                          </button>
+                        )}
+                        <button type="button" className="danger" onClick={() => handleDeleteCredencial(credencial)}>Eliminar</button>
+                      </div>,
+                    ];
                   })}
                 />
               </Panel>

@@ -128,6 +128,13 @@ export const createTorneo = (data) => request('/torneos/', {
   method: 'POST',
   body: JSON.stringify(data),
 });
+export const updateTorneo = (id, data) => request(`/torneos/${id}/`, {
+  method: 'PATCH',
+  body: JSON.stringify(data),
+});
+export const deleteTorneo = (id) => request(`/torneos/${id}/`, {
+  method: 'DELETE',
+});
 
 export const getEquipos = () => request('/equipos/');
 export const createEquipo = (data) => request('/equipos/', {
@@ -177,11 +184,17 @@ export const createCredencial = (data) => request('/credenciales/', {
   method: 'POST',
   body: JSON.stringify(data),
 });
+export const deleteCredencial = (id) => request(`/credenciales/${id}/`, {
+  method: 'DELETE',
+});
 
 export const getPartidos = () => request('/partidos/');
 export const updatePartido = (id, data) => request(`/partidos/${id}/`, {
   method: 'PATCH',
   body: JSON.stringify(data),
+});
+export const deletePartido = (id) => request(`/partidos/${id}/`, {
+  method: 'DELETE',
 });
 export const generarFixture = (data) => request('/fixture/generar/', {
   method: 'POST',
@@ -226,6 +239,8 @@ export default {
   getDashboardStats,
   getTorneos,
   createTorneo,
+  updateTorneo,
+  deleteTorneo,
   getEquipos,
   createEquipo,
   updateEquipo,
@@ -236,8 +251,10 @@ export default {
   deleteJugador,
   getCredenciales,
   createCredencial,
+  deleteCredencial,
   getPartidos,
   updatePartido,
+  deletePartido,
   generarFixture,
   registrarResultado,
   getPosiciones,

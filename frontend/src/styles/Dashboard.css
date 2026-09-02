@@ -402,6 +402,18 @@
   color: white;
 }
 
+.action-btn.danger {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+}
+
+.action-btn.danger:hover {
+  background: #ffe4e6;
+  color: #9f1239;
+  transform: translateY(-1px);
+}
+
 .loading,
 .error {
   text-align: center;
