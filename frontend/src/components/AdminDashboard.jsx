@@ -4,6 +4,8 @@ import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import { useAuth } from '../contexts/AuthContext';
 import api, { getMediaUrl } from '../services/api';
+import { DashboardConfirmModal } from './DashboardModal';
+import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
 
@@ -34,6 +36,7 @@ const initialEquipo = {
   nombre: '',
   categoria: 'Masculino',
   color_principal: 'Rojo',
+  logo_data_url: '',
   torneo: '',
 };
 
@@ -47,6 +50,7 @@ const initialJugador = {
   equipo: '',
   torneo: '',
   foto: null,
+  foto_data_url: '',
   activo: true,
 };
 
@@ -104,10 +108,12 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [confirmModal, setConfirmModal] = useState(null);
   const [torneoForm, setTorneoForm] = useState(initialTorneo);
   const [editingTorneoId, setEditingTorneoId] = useState(null);
   const [equipoForm, setEquipoForm] = useState(initialEquipo);
   const [editingEquipoId, setEditingEquipoId] = useState(null);
+  const [equipoLogoNombre, setEquipoLogoNombre] = useState('');
   const [jugadorForm, setJugadorForm] = useState(initialJugador);
   const [credencialForm, setCredencialForm] = useState(initialCredencial);
   const [jugadorFotoNombre, setJugadorFotoNombre] = useState('');
@@ -237,6 +243,20 @@ export default function AdminDashboard() {
     setNotice('');
   };
 
+  const requestConfirmation = (options) => new Promise((resolve) => {
+    setConfirmModal({
+      ...options,
+      onCancel: () => {
+        setConfirmModal(null);
+        resolve(false);
+      },
+      onConfirm: () => {
+        setConfirmModal(null);
+        resolve(true);
+      },
+    });
+  });
+
   const handleSaveTorneo = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -285,7 +305,13 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteTorneo = async (torneo) => {
-    if (!window.confirm(`Eliminar el campeonato "${torneo.nombre}"? Tambien se eliminaran sus equipos, jugadores, partidos y credenciales relacionados si el backend lo permite.`)) return;
+    const confirmed = await requestConfirmation({
+      title: 'Eliminar campeonato',
+      message: `Eliminar el campeonato "${torneo.nombre}"? Tambien se eliminaran sus equipos, jugadores, partidos y credenciales relacionados si el backend lo permite.`,
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!confirmed) return;
 
     setError('');
     setNotice('');
@@ -317,6 +343,7 @@ export default function AdminDashboard() {
 
       setEquipoForm(initialEquipo);
       setEditingEquipoId(null);
+      setEquipoLogoNombre('');
       await refreshData();
     } catch (err) {
       setError(getApiErrorMessage(err, 'No se pudo guardar el equipo.'));
@@ -333,8 +360,10 @@ export default function AdminDashboard() {
       nombre: equipo.nombre || '',
       categoria: equipo.categoria || 'Masculino',
       color_principal: equipo.color_principal || 'Rojo',
+      logo_data_url: equipo.logo_data_url || '',
       torneo: equipo.torneo || '',
     });
+    setEquipoLogoNombre('');
     setSelectedEquipoDetalle(String(equipo.id));
     setError('');
     setNotice('');
@@ -343,10 +372,54 @@ export default function AdminDashboard() {
   const cancelEditEquipo = () => {
     setEditingEquipoId(null);
     setEquipoForm(initialEquipo);
+    setEquipoLogoNombre('');
+  };
+
+  const handleEquipoLogoChange = async (event) => {
+    const file = event.target.files?.[0] || null;
+    if (!file) return;
+
+    try {
+      const logoDataUrl = await compressTeamLogo(file);
+      setEquipoLogoNombre(file.name);
+      setEquipoForm((current) => ({ ...current, logo_data_url: logoDataUrl }));
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const clearEquipoLogo = () => {
+    setEquipoLogoNombre('');
+    setEquipoForm((current) => ({ ...current, logo_data_url: '' }));
+  };
+
+  const handleJugadorFotoChange = async (event) => {
+    const file = event.target.files?.[0] || null;
+    if (!file) return;
+
+    try {
+      const fotoDataUrl = await compressPlayerPhoto(file);
+      setJugadorFotoNombre(file.name);
+      setJugadorForm((current) => ({ ...current, foto: null, foto_data_url: fotoDataUrl }));
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      event.target.value = '';
+    }
   };
 
   const handleDeleteEquipo = async (equipo) => {
-    if (!window.confirm(`Eliminar el equipo "${equipo.nombre}"? Tambien se quitaran sus jugadores y datos relacionados si el backend lo permite.`)) return;
+    const confirmed = await requestConfirmation({
+      title: 'Eliminar equipo',
+      message: `Eliminar el equipo "${equipo.nombre}"? Tambien se quitaran sus jugadores y datos relacionados si el backend lo permite.`,
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!confirmed) return;
 
     setError('');
     setNotice('');
@@ -396,7 +469,13 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteJugador = async (jugadorId) => {
-    if (!window.confirm('¿Eliminar este jugador?')) return;
+    const confirmed = await requestConfirmation({
+      title: 'Eliminar jugador',
+      message: 'Eliminar este jugador?',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!confirmed) return;
 
     try {
       await api.deleteJugador(jugadorId);
@@ -421,6 +500,7 @@ export default function AdminDashboard() {
       equipo: jugador.equipo,
       torneo: jugador.torneo,
       foto: null,
+      foto_data_url: jugador.foto_data_url || '',
       activo: jugador.activo,
     });
     setJugadorFotoNombre('');
@@ -460,13 +540,15 @@ export default function AdminDashboard() {
     setNotice('');
 
     try {
+      const usuarioPayload = buildUsuarioPayload(usuarioForm);
+
       if (editingUsuarioId) {
-        const payload = { ...usuarioForm };
+        const payload = { ...usuarioPayload };
         if (!payload.password) delete payload.password;
         await api.updateUsuario(editingUsuarioId, payload);
         setNotice('Usuario actualizado correctamente.');
       } else {
-        await api.createUsuario(usuarioForm);
+        await api.createUsuario(usuarioPayload);
         setNotice('Usuario creado correctamente.');
       }
 
@@ -474,7 +556,7 @@ export default function AdminDashboard() {
       setEditingUsuarioId(null);
       await refreshData();
     } catch (err) {
-      setError('No se pudo guardar el usuario. Revisa usuario, correo y contraseña.');
+      setError('No se pudo guardar el usuario. Revisa usuario, celular y contraseña.');
       console.error(err);
     } finally {
       setSaving(false);
@@ -495,7 +577,13 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteUsuario = async (usuarioId) => {
-    if (!window.confirm('¿Eliminar este usuario?')) return;
+    const confirmed = await requestConfirmation({
+      title: 'Eliminar usuario',
+      message: 'Eliminar este usuario?',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!confirmed) return;
 
     try {
       await api.deleteUsuario(usuarioId);
@@ -556,7 +644,13 @@ export default function AdminDashboard() {
   };
 
   const handleDeletePartido = async (partido) => {
-    if (!window.confirm(`Eliminar ${partido.equipo_local_nombre} vs ${partido.equipo_visitante_nombre}?`)) return;
+    const confirmed = await requestConfirmation({
+      title: 'Eliminar partido',
+      message: `Eliminar ${partido.equipo_local_nombre} vs ${partido.equipo_visitante_nombre}?`,
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!confirmed) return;
 
     setError('');
     setNotice('');
@@ -572,7 +666,13 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteCredencial = async (credencial) => {
-    if (!window.confirm(`Eliminar la credencial ${credencial.codigo}?`)) return;
+    const confirmed = await requestConfirmation({
+      title: 'Eliminar credencial',
+      message: `Eliminar la credencial ${credencial.codigo}?`,
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!confirmed) return;
 
     setError('');
     setNotice('');
@@ -725,6 +825,7 @@ export default function AdminDashboard() {
   }
 
   return (
+    <>
     <div className="dashboard-container">
       <header className="dashboard-header">
         <div className="header-content">
@@ -861,11 +962,20 @@ export default function AdminDashboard() {
                 >
                   <input placeholder="Nombre del equipo" value={equipoForm.nombre} onChange={(e) => setEquipoForm({ ...equipoForm, nombre: e.target.value })} required />
                   <input placeholder="Categoria" value={equipoForm.categoria} onChange={(e) => setEquipoForm({ ...equipoForm, categoria: e.target.value })} required />
-                  <input placeholder="Color principal" value={equipoForm.color_principal} onChange={(e) => setEquipoForm({ ...equipoForm, color_principal: e.target.value })} required />
                   <select value={equipoForm.torneo} onChange={(e) => setEquipoForm({ ...equipoForm, torneo: e.target.value })} required>
                     <option value="">Seleccionar torneo</option>
                     {torneos.map((torneo) => <option key={torneo.id} value={torneo.id}>{torneo.nombre}</option>)}
                   </select>
+                  <label className="image-input-label">
+                    <span>{equipoLogoNombre || (equipoForm.logo_data_url ? 'Logo cargado' : 'Logo del equipo')}</span>
+                    <input type="file" accept="image/*" onChange={handleEquipoLogoChange} />
+                  </label>
+                  {equipoForm.logo_data_url && (
+                    <div className="image-preview-card">
+                      <img src={equipoForm.logo_data_url} alt="Vista previa del logo" />
+                      <button type="button" onClick={clearEquipoLogo}>Quitar</button>
+                    </div>
+                  )}
                   <button className="action-btn primary" disabled={saving}>
                     {editingEquipoId ? 'Actualizar equipo' : 'Guardar equipo'}
                   </button>
@@ -881,6 +991,7 @@ export default function AdminDashboard() {
 
                     return (
                       <article className="team-card" key={equipo.id}>
+                        {getTeamLogoSrc(equipo) ? <img className="team-logo-thumb large" src={getTeamLogoSrc(equipo)} alt={equipo.nombre} /> : null}
                         <div>
                           <h4>{equipo.nombre}</h4>
                           <p>{torneoById[String(equipo.torneo)]?.nombre || 'Sin torneo'} · {equipo.categoria}</p>
@@ -908,11 +1019,12 @@ export default function AdminDashboard() {
                   <div className="team-detail">
                     <h4>Jugadores de {equipoById[selectedEquipoDetalle]?.nombre}</h4>
                     <DataTable
-                      headers={['Jugador', 'Tipo', 'Documento', 'Posicion', 'Acciones']}
+                      headers={['Jugador', 'Foto', 'Tipo', 'Documento', 'Posicion', 'Acciones']}
                       rows={jugadores
                         .filter((jugador) => String(jugador.equipo) === selectedEquipoDetalle)
                         .map((jugador) => [
                           `${jugador.nombre} ${jugador.apellido}`,
+                          getPlayerPhotoSrc(jugador) ? <img key={`foto-detalle-${jugador.id}`} className="player-thumb" src={getPlayerPhotoSrc(jugador)} alt={`${jugador.nombre} ${jugador.apellido}`} /> : '-',
                           jugador.tipo_persona || 'JUGADOR',
                           jugador.documento,
                           jugador.posicion,
@@ -961,11 +1073,7 @@ export default function AdminDashboard() {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setJugadorFotoNombre(file?.name || '');
-                        setJugadorForm({ ...jugadorForm, foto: file });
-                      }}
+                      onChange={handleJugadorFotoChange}
                     />
                   </label>
                   <button className="action-btn primary" disabled={saving}>
@@ -985,7 +1093,7 @@ export default function AdminDashboard() {
                   headers={['Jugador', 'Foto', 'Tipo', 'Documento', 'Posicion', 'Equipo', 'Activo', 'Acciones']}
                   rows={jugadores.map((jugador) => [
                     `${jugador.nombre} ${jugador.apellido}`,
-                    jugador.foto ? <img key={`foto-${jugador.id}`} className="player-thumb" src={getMediaUrl(jugador.foto)} alt={`${jugador.nombre} ${jugador.apellido}`} /> : '-',
+                    getPlayerPhotoSrc(jugador) ? <img key={`foto-${jugador.id}`} className="player-thumb" src={getPlayerPhotoSrc(jugador)} alt={`${jugador.nombre} ${jugador.apellido}`} /> : '-',
                     jugador.tipo_persona || 'JUGADOR',
                     jugador.documento,
                     jugador.posicion,
@@ -1294,7 +1402,6 @@ export default function AdminDashboard() {
               <Panel title="Usuarios" subtitle="Crea y administra cuentas de administradores, entrenadores y delegados.">
                 <form className="dashboard-form" onSubmit={handleSaveUsuario}>
                   <input placeholder="Usuario" value={usuarioForm.username} onChange={(e) => setUsuarioForm({ ...usuarioForm, username: e.target.value })} required />
-                  <input placeholder="Correo" type="email" value={usuarioForm.email} onChange={(e) => setUsuarioForm({ ...usuarioForm, email: e.target.value })} required />
                   <input placeholder={editingUsuarioId ? 'Nueva contraseña opcional' : 'Contraseña'} type="password" value={usuarioForm.password} onChange={(e) => setUsuarioForm({ ...usuarioForm, password: e.target.value })} required={!editingUsuarioId} />
                   <select value={usuarioForm.rol} onChange={(e) => setUsuarioForm({ ...usuarioForm, rol: e.target.value })}>
                     <option value="ENTRENADOR">Entrenador</option>
@@ -1303,7 +1410,7 @@ export default function AdminDashboard() {
                   </select>
                   <input placeholder="Nombre" value={usuarioForm.first_name} onChange={(e) => setUsuarioForm({ ...usuarioForm, first_name: e.target.value })} />
                   <input placeholder="Apellido" value={usuarioForm.last_name} onChange={(e) => setUsuarioForm({ ...usuarioForm, last_name: e.target.value })} />
-                  <input placeholder="Telefono" value={usuarioForm.telefono} onChange={(e) => setUsuarioForm({ ...usuarioForm, telefono: e.target.value })} />
+                  <input placeholder="Numero de celular" type="tel" value={usuarioForm.telefono} onChange={(e) => setUsuarioForm({ ...usuarioForm, telefono: e.target.value })} required />
                   <button className="action-btn primary" disabled={saving}>
                     {editingUsuarioId ? 'Actualizar usuario' : 'Crear usuario'}
                   </button>
@@ -1317,11 +1424,11 @@ export default function AdminDashboard() {
                   )}
                 </form>
                 <DataTable
-                  headers={['Usuario', 'Nombre', 'Correo', 'Rol', 'Acciones']}
+                  headers={['Usuario', 'Nombre', 'Celular', 'Rol', 'Acciones']}
                   rows={usuarios.map((usuario) => [
                     usuario.username,
                     `${usuario.first_name || ''} ${usuario.last_name || ''}`.trim() || '-',
-                    usuario.email,
+                    usuario.telefono || '-',
                     usuario.rol,
                     <div key={`usuario-${usuario.id}`} className="row-actions">
                       <button type="button" onClick={() => handleEditUsuario(usuario)}>Editar</button>
@@ -1335,6 +1442,8 @@ export default function AdminDashboard() {
         </main>
       </div>
     </div>
+    <DashboardConfirmModal {...(confirmModal || {})} />
+    </>
   );
 }
 
@@ -1425,6 +1534,26 @@ function formatSets(partido) {
     .join(' / ');
 }
 
+function getTeamLogoSrc(equipo) {
+  return equipo?.logo_data_url || '';
+}
+
+function getPlayerPhotoSrc(jugador) {
+  return jugador?.foto_data_url || (jugador?.foto ? getMediaUrl(jugador.foto) : '');
+}
+
+function buildUsuarioPayload(form) {
+  const username = String(form.username || '').trim();
+  const fallbackEmail = `${username || 'usuario'}@ayacucho.local`.toLowerCase();
+
+  return {
+    ...form,
+    username,
+    email: form.email || fallbackEmail,
+    telefono: String(form.telefono || '').trim(),
+  };
+}
+
 function getApiErrorMessage(error, fallback) {
   const raw = error?.message || '';
 
@@ -1461,7 +1590,7 @@ async function downloadCredentialsPdf({ equipo, torneo, cards }) {
   const logoData = await toDataUrl(clubLogo);
   const enrichedCards = await Promise.all(cards.map(async (card) => ({
     ...card,
-    photoData: card.jugador.foto ? await toDataUrl(getMediaUrl(card.jugador.foto)).catch(() => null) : null,
+    photoData: card.jugador.foto_data_url || (card.jugador.foto ? await toDataUrl(getMediaUrl(card.jugador.foto)).catch(() => null) : null),
   })));
   const pageCards = chunk(enrichedCards, 8);
 

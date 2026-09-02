@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api, { getMediaUrl } from '../services/api';
+import { DashboardConfirmModal } from './DashboardModal';
+import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
 
@@ -18,6 +20,7 @@ const initialEquipo = {
   nombre: '',
   categoria: 'Masculino',
   color_principal: 'Rojo',
+  logo_data_url: '',
   torneo: '',
 };
 
@@ -31,6 +34,7 @@ const initialJugador = {
   equipo: '',
   torneo: '',
   foto: null,
+  foto_data_url: '',
   activo: true,
 };
 
@@ -45,6 +49,7 @@ export default function EntrenadorDashboard() {
   const [posiciones, setPosiciones] = useState([]);
   const [equipoForm, setEquipoForm] = useState(initialEquipo);
   const [jugadorForm, setJugadorForm] = useState(initialJugador);
+  const [equipoLogoNombre, setEquipoLogoNombre] = useState('');
   const [fotoNombre, setFotoNombre] = useState('');
   const [editingJugadorId, setEditingJugadorId] = useState(null);
   const [selectedEquipo, setSelectedEquipo] = useState('');
@@ -53,6 +58,7 @@ export default function EntrenadorDashboard() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const torneoById = useMemo(() => {
     return Object.fromEntries(torneos.map((torneo) => [String(torneo.id), torneo]));
@@ -161,6 +167,20 @@ export default function EntrenadorDashboard() {
     setNotice('');
   };
 
+  const requestConfirmation = (options) => new Promise((resolve) => {
+    setConfirmModal({
+      ...options,
+      onCancel: () => {
+        setConfirmModal(null);
+        resolve(false);
+      },
+      onConfirm: () => {
+        setConfirmModal(null);
+        resolve(true);
+      },
+    });
+  });
+
   const handleCreateEquipo = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -173,6 +193,7 @@ export default function EntrenadorDashboard() {
       setSelectedTorneo(String(equipo.torneo));
       setJugadorForm({ ...initialJugador, equipo: String(equipo.id), torneo: equipo.torneo });
       setEquipoForm(initialEquipo);
+      setEquipoLogoNombre('');
       await refreshData();
       setNotice('Equipo registrado correctamente.');
     } catch (err) {
@@ -232,12 +253,52 @@ export default function EntrenadorDashboard() {
       equipo: jugador.equipo,
       torneo: jugador.torneo,
       foto: null,
+      foto_data_url: jugador.foto_data_url || '',
       activo: jugador.activo,
     });
   };
 
+  const handleEquipoLogoChange = async (event) => {
+    const file = event.target.files?.[0] || null;
+    if (!file) return;
+
+    try {
+      const logoDataUrl = await compressTeamLogo(file);
+      setEquipoLogoNombre(file.name);
+      setEquipoForm((current) => ({ ...current, logo_data_url: logoDataUrl }));
+      setError('');
+    } catch (err) {
+      setError(err.message || 'No se pudo procesar el logo.');
+    }
+  };
+
+  const clearEquipoLogo = () => {
+    setEquipoLogoNombre('');
+    setEquipoForm((current) => ({ ...current, logo_data_url: '' }));
+  };
+
+  const handleJugadorFotoChange = async (event) => {
+    const file = event.target.files?.[0] || null;
+    if (!file) return;
+
+    try {
+      const fotoDataUrl = await compressPlayerPhoto(file);
+      setFotoNombre(file.name);
+      setJugadorForm((current) => ({ ...current, foto: null, foto_data_url: fotoDataUrl }));
+      setError('');
+    } catch (err) {
+      setError(err.message || 'No se pudo procesar la foto.');
+    }
+  };
+
   const handleDeleteJugador = async (jugadorId) => {
-    if (!window.confirm('Eliminar este registro?')) return;
+    const confirmed = await requestConfirmation({
+      title: 'Eliminar registro',
+      message: 'Eliminar este registro?',
+      confirmLabel: 'Eliminar',
+      danger: true,
+    });
+    if (!confirmed) return;
 
     setError('');
     setNotice('');
@@ -283,6 +344,7 @@ export default function EntrenadorDashboard() {
   }
 
   return (
+    <>
     <div className="dashboard-container coach-dashboard">
       <header className="dashboard-header coach-header">
         <div className="header-content">
@@ -405,17 +467,27 @@ export default function EntrenadorDashboard() {
                 <form className="dashboard-form" onSubmit={handleCreateEquipo}>
                   <input placeholder="Nombre del equipo" value={equipoForm.nombre} onChange={(e) => setEquipoForm({ ...equipoForm, nombre: e.target.value })} required />
                   <input placeholder="Categoria" value={equipoForm.categoria} onChange={(e) => setEquipoForm({ ...equipoForm, categoria: e.target.value })} required />
-                  <input placeholder="Color principal" value={equipoForm.color_principal} onChange={(e) => setEquipoForm({ ...equipoForm, color_principal: e.target.value })} required />
                   <select value={equipoForm.torneo} onChange={(e) => setEquipoForm({ ...equipoForm, torneo: e.target.value })} required>
                     <option value="">Seleccionar campeonato</option>
                     {torneos.map((torneo) => <option key={torneo.id} value={torneo.id}>{torneo.nombre}</option>)}
                   </select>
+                  <label className="image-input-label">
+                    <span>{equipoLogoNombre || (equipoForm.logo_data_url ? 'Logo cargado' : 'Logo del equipo')}</span>
+                    <input type="file" accept="image/*" onChange={handleEquipoLogoChange} />
+                  </label>
+                  {equipoForm.logo_data_url && (
+                    <div className="image-preview-card">
+                      <img src={equipoForm.logo_data_url} alt="Vista previa del logo" />
+                      <button type="button" onClick={clearEquipoLogo}>Quitar</button>
+                    </div>
+                  )}
                   <button className="action-btn primary" disabled={saving}>Guardar equipo</button>
                 </form>
 
                 <DataTable
-                  headers={['Equipo', 'Campeonato', 'Categoria', 'Jugadores']}
+                  headers={['Logo', 'Equipo', 'Campeonato', 'Categoria', 'Jugadores']}
                   rows={equiposTorneo.map((equipo) => [
+                    getTeamLogoSrc(equipo) ? <img key={`logo-${equipo.id}`} className="team-logo-thumb" src={getTeamLogoSrc(equipo)} alt={equipo.nombre} /> : '-',
                     <strong key={`team-${equipo.id}`} className={String(equipo.id) === String(selectedEquipo) ? 'highlight-text' : ''}>{equipo.nombre}</strong>,
                     torneoById[String(equipo.torneo)]?.nombre || '-',
                     equipo.categoria,
@@ -449,11 +521,7 @@ export default function EntrenadorDashboard() {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setFotoNombre(file?.name || '');
-                        setJugadorForm({ ...jugadorForm, foto: file });
-                      }}
+                      onChange={handleJugadorFotoChange}
                     />
                   </label>
                   <button className="action-btn primary" disabled={saving || !selectedEquipo}>
@@ -470,7 +538,7 @@ export default function EntrenadorDashboard() {
                   headers={['Jugador', 'Foto', 'Tipo', 'Documento', 'Posicion', 'Estado', 'Acciones']}
                   rows={jugadoresEquipo.map((jugador) => [
                     `${jugador.nombre} ${jugador.apellido}`,
-                    jugador.foto ? <img key={`foto-${jugador.id}`} className="player-thumb" src={getMediaUrl(jugador.foto)} alt={`${jugador.nombre} ${jugador.apellido}`} /> : '-',
+                    getPlayerPhotoSrc(jugador) ? <img key={`foto-${jugador.id}`} className="player-thumb" src={getPlayerPhotoSrc(jugador)} alt={`${jugador.nombre} ${jugador.apellido}`} /> : '-',
                     jugador.tipo_persona || 'JUGADOR',
                     jugador.documento,
                     jugador.posicion,
@@ -540,6 +608,8 @@ export default function EntrenadorDashboard() {
         </main>
       </div>
     </div>
+    <DashboardConfirmModal {...(confirmModal || {})} />
+    </>
   );
 }
 
@@ -638,6 +708,14 @@ function buildCellKey(cell) {
 function renderCell(cell) {
   if (cell === '' || cell === null || cell === undefined) return '-';
   return cell;
+}
+
+function getTeamLogoSrc(equipo) {
+  return equipo?.logo_data_url || '';
+}
+
+function getPlayerPhotoSrc(jugador) {
+  return jugador?.foto_data_url || (jugador?.foto ? getMediaUrl(jugador.foto) : '');
 }
 
 function getApiErrorMessage(error, fallback) {

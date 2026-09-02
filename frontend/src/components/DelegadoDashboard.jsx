@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
+import api, { getMediaUrl } from '../services/api';
+import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
 
@@ -18,6 +19,7 @@ const initialEquipo = {
   nombre: '',
   categoria: 'Masculino',
   color_principal: 'Rojo',
+  logo_data_url: '',
   torneo: '',
 };
 
@@ -31,6 +33,7 @@ const initialJugador = {
   equipo: '',
   torneo: '',
   foto: null,
+  foto_data_url: '',
   activo: true,
 };
 
@@ -46,6 +49,7 @@ export default function DelegadoDashboard() {
   const [credenciales, setCredenciales] = useState([]);
   const [equipoForm, setEquipoForm] = useState(initialEquipo);
   const [jugadorForm, setJugadorForm] = useState(initialJugador);
+  const [equipoLogoNombre, setEquipoLogoNombre] = useState('');
   const [jugadorFotoNombre, setJugadorFotoNombre] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -126,6 +130,7 @@ export default function DelegadoDashboard() {
     try {
       await api.createEquipo(equipoForm);
       setEquipoForm(initialEquipo);
+      setEquipoLogoNombre('');
       await refreshData();
       setNotice('Equipo registrado correctamente. Ya no podras registrar otro equipo en este campeonato.');
     } catch (err) {
@@ -133,6 +138,39 @@ export default function DelegadoDashboard() {
       console.error(err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEquipoLogoChange = async (event) => {
+    const file = event.target.files?.[0] || null;
+    if (!file) return;
+
+    try {
+      const logoDataUrl = await compressTeamLogo(file);
+      setEquipoLogoNombre(file.name);
+      setEquipoForm((current) => ({ ...current, logo_data_url: logoDataUrl }));
+      setError('');
+    } catch (err) {
+      setError(err.message || 'No se pudo procesar el logo.');
+    }
+  };
+
+  const clearEquipoLogo = () => {
+    setEquipoLogoNombre('');
+    setEquipoForm((current) => ({ ...current, logo_data_url: '' }));
+  };
+
+  const handleJugadorFotoChange = async (event) => {
+    const file = event.target.files?.[0] || null;
+    if (!file) return;
+
+    try {
+      const fotoDataUrl = await compressPlayerPhoto(file);
+      setJugadorFotoNombre(file.name);
+      setJugadorForm((current) => ({ ...current, foto: null, foto_data_url: fotoDataUrl }));
+      setError('');
+    } catch (err) {
+      setError(err.message || 'No se pudo procesar la foto.');
     }
   };
 
@@ -256,15 +294,25 @@ export default function DelegadoDashboard() {
                       <Field label="Categoria" help="Ejemplo: Mayores Masculino.">
                         <input value={equipoForm.categoria} onChange={(e) => setEquipoForm({ ...equipoForm, categoria: e.target.value })} placeholder="Categoria" required />
                       </Field>
-                      <Field label="Color principal" help="Ejemplo: Rojo.">
-                        <input value={equipoForm.color_principal} onChange={(e) => setEquipoForm({ ...equipoForm, color_principal: e.target.value })} placeholder="Color principal" required />
+                      <Field label="Logo del equipo" help="Se comprime automaticamente antes de guardar.">
+                        <label className="image-input-label">
+                          <span>{equipoLogoNombre || (equipoForm.logo_data_url ? 'Logo cargado' : 'Seleccionar logo')}</span>
+                          <input type="file" accept="image/*" onChange={handleEquipoLogoChange} />
+                        </label>
                       </Field>
+                      {equipoForm.logo_data_url && (
+                        <div className="image-preview-card">
+                          <img src={equipoForm.logo_data_url} alt="Vista previa del logo" />
+                          <button type="button" onClick={clearEquipoLogo}>Quitar</button>
+                        </div>
+                      )}
                       <button className="action-btn primary" disabled={saving}>Registrar mi equipo</button>
                     </form>
                   </>
                 ) : (
                   <div className="team-list">
                     <article className="team-card">
+                      {getTeamLogoSrc(miEquipo) ? <img className="team-logo-thumb large" src={getTeamLogoSrc(miEquipo)} alt={miEquipo.nombre} /> : null}
                       <div>
                         <h4>{miEquipo.nombre}</h4>
                         <p>{torneoActual?.nombre || 'Campeonato'} · {miEquipo.categoria}</p>
@@ -302,19 +350,16 @@ export default function DelegadoDashboard() {
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0] || null;
-                            setJugadorFotoNombre(file?.name || '');
-                            setJugadorForm({ ...jugadorForm, foto: file });
-                          }}
+                          onChange={handleJugadorFotoChange}
                         />
                       </label>
                       <button className="action-btn primary" disabled={saving}>Guardar jugador</button>
                     </form>
                     <DataTable
-                      headers={['Jugador', 'Tipo', 'Documento', 'Posicion', 'Activo']}
+                      headers={['Jugador', 'Foto', 'Tipo', 'Documento', 'Posicion', 'Activo']}
                       rows={jugadores.map((jugador) => [
                         `${jugador.nombre} ${jugador.apellido}`,
+                        getPlayerPhotoSrc(jugador) ? <img key={`foto-${jugador.id}`} className="player-thumb" src={getPlayerPhotoSrc(jugador)} alt={`${jugador.nombre} ${jugador.apellido}`} /> : '-',
                         jugador.tipo_persona,
                         jugador.documento,
                         jugador.posicion,
@@ -485,6 +530,14 @@ function formatTime(value) {
 function formatSets(partido) {
   if (!partido.sets?.length) return '-';
   return partido.sets.map((set) => `${set.puntos_local}-${set.puntos_visitante}`).join(' / ');
+}
+
+function getTeamLogoSrc(equipo) {
+  return equipo?.logo_data_url || '';
+}
+
+function getPlayerPhotoSrc(jugador) {
+  return jugador?.foto_data_url || (jugador?.foto ? getMediaUrl(jugador.foto) : '');
 }
 
 function getApiErrorMessage(error, fallback) {

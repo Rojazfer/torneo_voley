@@ -40,6 +40,7 @@ class Equipo(models.Model):
     nombre = models.CharField(max_length=150, verbose_name='Nombre del equipo')
     categoria = models.CharField(max_length=80, default='Masculino', verbose_name='Categoría')
     color_principal = models.CharField(max_length=50, default='Rojo', verbose_name='Color principal')
+    logo_data_url = models.TextField(blank=True, default='', verbose_name='Logo comprimido')
     torneo = models.ForeignKey(Torneo, on_delete=models.CASCADE, related_name='equipos', verbose_name='Torneo')
     delegado = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='equipos', verbose_name='Delegado', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -79,6 +80,7 @@ class Jugador(models.Model):
     equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE, related_name='jugadores', verbose_name='Equipo')
     torneo = models.ForeignKey(Torneo, on_delete=models.CASCADE, related_name='jugadores', verbose_name='Torneo')
     foto = models.ImageField(upload_to='jugadores/', blank=True, null=True, verbose_name='Foto')
+    foto_data_url = models.TextField(blank=True, default='', verbose_name='Foto comprimida')
     activo = models.BooleanField(default=True, verbose_name='Activo')
     created_at = models.DateTimeField(auto_now_add=True)
 
