@@ -5,6 +5,7 @@ import QRCode from 'qrcode';
 import { useAuth } from '../contexts/AuthContext';
 import api, { getMediaUrl } from '../services/api';
 import { DashboardConfirmModal } from './DashboardModal';
+import FixtureMatch from './FixtureMatch';
 import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
@@ -1219,7 +1220,7 @@ export default function AdminDashboard() {
                     />,
                     partido.lugar,
                     partido.torneo_nombre,
-                    `${partido.equipo_local_nombre} vs ${partido.equipo_visitante_nombre}`,
+                    <FixtureMatch key={`match-${partido.id}`} partido={partido} equiposById={equipoById} />,
                     partido.estado,
                     <div key={`fixture-partido-${partido.id}`} className="row-actions">
                       <button type="button" onClick={() => handleEditPartido(partido)}>Editar</button>

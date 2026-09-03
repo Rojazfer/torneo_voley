@@ -57,7 +57,9 @@ class PartidoSerializer(serializers.ModelSerializer):
     sets = SetPartidoSerializer(many=True, read_only=True)
     torneo_nombre = serializers.CharField(source='torneo.nombre', read_only=True)
     equipo_local_nombre = serializers.CharField(source='equipo_local.nombre', read_only=True)
+    equipo_local_logo = serializers.CharField(source='equipo_local.logo_data_url', read_only=True)
     equipo_visitante_nombre = serializers.CharField(source='equipo_visitante.nombre', read_only=True)
+    equipo_visitante_logo = serializers.CharField(source='equipo_visitante.logo_data_url', read_only=True)
     ganador_nombre = serializers.CharField(source='ganador.nombre', read_only=True)
 
     class Meta:
@@ -68,8 +70,10 @@ class PartidoSerializer(serializers.ModelSerializer):
             'torneo_nombre',
             'equipo_local',
             'equipo_local_nombre',
+            'equipo_local_logo',
             'equipo_visitante',
             'equipo_visitante_nombre',
+            'equipo_visitante_logo',
             'fecha',
             'hora',
             'lugar',

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api, { getMediaUrl } from '../services/api';
 import { DashboardConfirmModal } from './DashboardModal';
+import FixtureMatch from './FixtureMatch';
 import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
@@ -63,6 +64,10 @@ export default function EntrenadorDashboard() {
   const torneoById = useMemo(() => {
     return Object.fromEntries(torneos.map((torneo) => [String(torneo.id), torneo]));
   }, [torneos]);
+
+  const equipoById = useMemo(() => {
+    return Object.fromEntries(equipos.map((equipo) => [String(equipo.id), equipo]));
+  }, [equipos]);
 
   const equipoActual = useMemo(() => {
     return equipos.find((equipo) => String(equipo.id) === String(selectedEquipo));
@@ -452,7 +457,7 @@ export default function EntrenadorDashboard() {
                       rows={proximosPartidos.map((partido) => [
                         partido.fecha,
                         formatTime(partido.hora),
-                        formatPartido(partido),
+                        <FixtureMatch key={`proximo-${partido.id}`} partido={partido} equiposById={equipoById} highlightEquipoId={selectedEquipo} />,
                         partido.lugar,
                         partido.estado,
                       ])}
@@ -562,7 +567,7 @@ export default function EntrenadorDashboard() {
                     partido.fecha,
                     formatTime(partido.hora),
                     partido.lugar,
-                    <span key={`fixture-${partido.id}`} className={isPartidoDelEquipo(partido, selectedEquipo) ? 'highlight-text' : ''}>{formatPartido(partido)}</span>,
+                    <FixtureMatch key={`fixture-${partido.id}`} partido={partido} equiposById={equipoById} highlightEquipoId={selectedEquipo} />,
                     partido.estado,
                   ])}
                 />

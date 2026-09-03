@@ -755,6 +755,57 @@
   width: 72px;
 }
 
+.fixture-match {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 230px;
+}
+
+.fixture-side {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  max-width: 230px;
+  min-width: 0;
+}
+
+.fixture-side span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fixture-vs {
+  color: #98a2b3;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.fixture-team-logo {
+  background: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  flex: 0 0 auto;
+  height: 34px;
+  object-fit: contain;
+  padding: 3px;
+  width: 34px;
+}
+
+.fixture-team-logo.placeholder {
+  align-items: center;
+  background: #f0f4ff;
+  color: #4f66d8;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 900;
+  justify-content: center;
+}
+
 .dashboard-table th {
   color: #667085;
   font-size: 12px;

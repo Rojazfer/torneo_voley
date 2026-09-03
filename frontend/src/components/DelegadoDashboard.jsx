@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api, { getMediaUrl } from '../services/api';
+import FixtureMatch from './FixtureMatch';
 import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
@@ -58,6 +59,10 @@ export default function DelegadoDashboard() {
 
   const miEquipo = equipos[0] || null;
   const torneoActual = torneos.find((torneo) => String(torneo.id) === String(miEquipo?.torneo));
+
+  const equipoById = useMemo(() => {
+    return Object.fromEntries(equipos.map((equipo) => [String(equipo.id), equipo]));
+  }, [equipos]);
 
   const misPartidos = useMemo(() => {
     if (!miEquipo) return [];
@@ -381,7 +386,7 @@ export default function DelegadoDashboard() {
                     partido.fecha,
                     formatTime(partido.hora),
                     partido.lugar,
-                    `${partido.equipo_local_nombre} vs ${partido.equipo_visitante_nombre}`,
+                    <FixtureMatch key={`fixture-${partido.id}`} partido={partido} equiposById={equipoById} highlightEquipoId={miEquipo?.id} />,
                     partido.estado,
                   ])}
                 />
