@@ -1706,7 +1706,27 @@ function drawFixtureHeader(doc, y) {
   doc.text('PARTIDO', margin + 116, y);
 }
 
+function getBirthYear(fechaNacimiento) {
+  if (!fechaNacimiento) return '';
+  const year = Number(String(fechaNacimiento).slice(0, 4));
+  return Number.isFinite(year) && year > 0 ? year : '';
+}
+
+function getCredentialAge(fechaNacimiento) {
+  const year = getBirthYear(fechaNacimiento);
+  if (!year) return '';
+  return year >= 2008 && year <= 2026 ? 18 : Math.max(0, 2026 - year);
+}
+
+function getPlayerDorsal(jugador) {
+  return jugador?.dorsal || jugador?.numero_dorsal || jugador?.numero_camiseta || '';
+}
+
 function drawCredentialCard(doc, { x, y, width, height, logoData, photoData, qr, jugador, equipo, torneo }) {
+  const birthYear = getBirthYear(jugador.fecha_nacimiento);
+  const credentialAge = getCredentialAge(jugador.fecha_nacimiento);
+  const dorsal = getPlayerDorsal(jugador);
+
   doc.setFillColor(245, 247, 252);
   doc.roundedRect(x, y, width, height, 3.5, 3.5, 'F');
   doc.setFillColor(15, 15, 16);
@@ -1757,8 +1777,20 @@ function drawCredentialCard(doc, { x, y, width, height, logoData, photoData, qr,
   doc.text(`${jugador.nombre} ${jugador.apellido}`.toUpperCase(), x + 35, y + 34.5, { maxWidth: 31 });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(5.3);
-  doc.text(`CI: ${jugador.documento}`, x + 35, y + 41.5);
-  doc.text(`Posicion: ${jugador.posicion}`, x + 51, y + 41.5);
+  doc.text(`CI: ${jugador.documento}`, x + 35, y + 40.2);
+  doc.text(`Pos.: ${jugador.posicion}`, x + 52, y + 40.2, { maxWidth: 15 });
+  doc.text(`Nac.: ${birthYear || '-'}`, x + 35, y + 44);
+  doc.text(`Edad: ${credentialAge || '-'}`, x + 52, y + 44);
+
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(x + width - 20.5, y + 15.4, 15.5, 5.6, 1.2, 1.2, 'F');
+  doc.setTextColor(178, 17, 25);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(3);
+  doc.text('DORSAL', x + width - 19.3, y + 18);
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(dorsal ? 5.7 : 4.6);
+  doc.text(dorsal || '____', x + width - 12.8, y + 19.2, { align: 'center', maxWidth: 6 });
 
   doc.setFillColor(255, 255, 255);
   doc.roundedRect(x + width - 20.5, y + 22, 15.5, 15.5, 1.2, 1.2, 'F');
