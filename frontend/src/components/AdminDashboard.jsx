@@ -1713,9 +1713,20 @@ function getBirthYear(fechaNacimiento) {
 }
 
 function getCredentialAge(fechaNacimiento) {
-  const year = getBirthYear(fechaNacimiento);
-  if (!year) return '';
-  return year >= 2008 && year <= 2026 ? 18 : Math.max(0, 2026 - year);
+  if (!fechaNacimiento) return '';
+
+  const birthDate = new Date(`${fechaNacimiento}T00:00:00`);
+  if (Number.isNaN(birthDate.getTime())) return '';
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const hasBirthdayPassed =
+    today.getMonth() > birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
+
+  if (!hasBirthdayPassed) age -= 1;
+
+  return age >= 0 ? age : '';
 }
 
 function getPlayerDorsal(jugador) {
