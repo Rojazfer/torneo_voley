@@ -151,18 +151,10 @@ export const deleteEquipo = (id) => request(`/equipos/${id}/`, {
 
 export const getJugadores = () => request('/jugadores/');
 export const createJugador = (data) => {
-  if (data.foto instanceof File && !data.foto_data_url) {
-    const formData = new FormData();
-
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== '' && value !== null && value !== undefined) {
-        formData.append(key, value);
-      }
-    });
-
+  if (data.foto instanceof File) {
     return request('/jugadores/', {
       method: 'POST',
-      body: formData,
+      body: toFormData(data),
     });
   }
 
@@ -173,7 +165,7 @@ export const createJugador = (data) => {
 };
 export const updateJugador = (id, data) => request(`/jugadores/${id}/`, {
   method: 'PATCH',
-  body: data.foto instanceof File && !data.foto_data_url ? toFormData(data) : JSON.stringify(data),
+  body: data.foto instanceof File ? toFormData(data) : JSON.stringify(data),
 });
 export const deleteJugador = (id) => request(`/jugadores/${id}/`, {
   method: 'DELETE',

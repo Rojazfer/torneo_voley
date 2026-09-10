@@ -289,7 +289,7 @@ export default function EntrenadorDashboard() {
     try {
       const fotoDataUrl = await compressPlayerPhoto(file);
       setFotoNombre(file.name);
-      setJugadorForm((current) => ({ ...current, foto: null, foto_data_url: fotoDataUrl }));
+      setJugadorForm((current) => ({ ...current, foto: file, foto_data_url: fotoDataUrl }));
       setError('');
     } catch (err) {
       setError(err.message || 'No se pudo procesar la foto.');
