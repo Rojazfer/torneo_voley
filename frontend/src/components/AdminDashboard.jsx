@@ -1733,10 +1733,35 @@ function getPlayerDorsal(jugador) {
   return jugador?.dorsal || jugador?.numero_dorsal || jugador?.numero_camiseta || '';
 }
 
+function getCredentialNameLayout(doc, fullName, maxWidth, maxLines = 3) {
+  const fontSizes = [8.1, 7.4, 6.8, 6.2, 5.7, 5.2];
+
+  for (const fontSize of fontSizes) {
+    doc.setFontSize(fontSize);
+    const lines = doc.splitTextToSize(fullName, maxWidth);
+    if (lines.length <= maxLines) {
+      return { fontSize, lines };
+    }
+  }
+
+  doc.setFontSize(fontSizes.at(-1));
+  const lines = doc.splitTextToSize(fullName, maxWidth).slice(0, maxLines);
+  const lastLineIndex = lines.length - 1;
+  const ellipsis = '...';
+
+  while (lastLineIndex >= 0 && doc.getTextWidth(`${lines[lastLineIndex]}${ellipsis}`) > maxWidth && lines[lastLineIndex].length > 0) {
+    lines[lastLineIndex] = lines[lastLineIndex].slice(0, -1).trimEnd();
+  }
+
+  lines[lastLineIndex] = `${lines[lastLineIndex]}${ellipsis}`;
+  return { fontSize: fontSizes.at(-1), lines };
+}
+
 function drawCredentialCard(doc, { x, y, width, height, logoData, photoData, qr, jugador, equipo, torneo }) {
   const birthYear = getBirthYear(jugador.fecha_nacimiento);
   const credentialAge = getCredentialAge(jugador.fecha_nacimiento);
   const dorsal = getPlayerDorsal(jugador);
+  const playerName = `${jugador.nombre} ${jugador.apellido}`.toUpperCase();
 
   doc.setFillColor(245, 247, 252);
   doc.roundedRect(x, y, width, height, 3.5, 3.5, 'F');
@@ -1774,9 +1799,9 @@ function drawCredentialCard(doc, { x, y, width, height, logoData, photoData, qr,
   doc.rect(x + 8, y + 24, 21, 21);
 
   doc.setFillColor(255, 255, 255);
-  doc.roundedRect(x + 33, y + 23, 36, 23, 2, 2, 'F');
+  doc.roundedRect(x + 33, y + 23, 36, 24.5, 2, 2, 'F');
   doc.setDrawColor(230, 235, 242);
-  doc.roundedRect(x + 33, y + 23, 36, 23, 2, 2);
+  doc.roundedRect(x + 33, y + 23, 36, 24.5, 2, 2);
   doc.setFillColor(178, 17, 25);
   doc.roundedRect(x + 35, y + 25, 19, 4, 1, 1, 'F');
   doc.setTextColor(255, 255, 255);
@@ -1784,14 +1809,15 @@ function drawCredentialCard(doc, { x, y, width, height, logoData, photoData, qr,
   doc.setFontSize(3.8);
   doc.text(jugador.tipo_persona === 'ENTRENADOR' ? 'ENTRENADOR' : 'JUGADOR', x + 36.5, y + 27.7, { maxWidth: 17 });
   doc.setTextColor(15, 23, 42);
-  doc.setFontSize(8.4);
-  doc.text(`${jugador.nombre} ${jugador.apellido}`.toUpperCase(), x + 35, y + 34.5, { maxWidth: 31 });
+  const nameLayout = getCredentialNameLayout(doc, playerName, 31);
+  doc.setFontSize(nameLayout.fontSize);
+  doc.text(nameLayout.lines, x + 35, y + 33.2, { lineHeightFactor: 1.05 });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(5.3);
-  doc.text(`CI: ${jugador.documento}`, x + 35, y + 40.2);
-  doc.text(`Pos.: ${jugador.posicion}`, x + 52, y + 40.2, { maxWidth: 15 });
-  doc.text(`Nac.: ${birthYear || '-'}`, x + 35, y + 44);
-  doc.text(`Edad: ${credentialAge || '-'}`, x + 52, y + 44);
+  doc.text(`CI: ${jugador.documento}`, x + 35, y + 42.2);
+  doc.text(`Pos.: ${jugador.posicion}`, x + 52, y + 42.2, { maxWidth: 15 });
+  doc.text(`Nac.: ${birthYear || '-'}`, x + 35, y + 45.5);
+  doc.text(`Edad: ${credentialAge || '-'}`, x + 52, y + 45.5);
 
   doc.setFillColor(255, 255, 255);
   doc.roundedRect(x + width - 20.5, y + 15.4, 15.5, 5.6, 1.2, 1.2, 'F');
