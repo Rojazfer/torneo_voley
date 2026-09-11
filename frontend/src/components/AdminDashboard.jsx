@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import api, { getMediaUrl } from '../services/api';
 import { DashboardConfirmModal } from './DashboardModal';
 import FixtureMatch from './FixtureMatch';
+import PositionTeamCell from './PositionTeamCell';
 import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
@@ -1324,7 +1325,11 @@ export default function AdminDashboard() {
                   headers={['Pos', 'Equipo', 'Campeonato', 'PJ', 'PG', 'PP', 'SF', 'SC', 'PF', 'PC', 'DIF', 'PTS']}
                   rows={posiciones.map((row) => [
                     row.posicion,
-                    row.equipo_nombre,
+                    <PositionTeamCell
+                      key={`pos-${row.equipo}`}
+                      name={row.equipo_nombre}
+                      logoSrc={getTeamLogoSrc(equipoById[String(row.equipo)]) || getMediaUrl(row.equipo_logo)}
+                    />,
                     row.torneo_nombre,
                     row.pj,
                     row.pg,
@@ -1536,7 +1541,7 @@ function formatSets(partido) {
 }
 
 function getTeamLogoSrc(equipo) {
-  return equipo?.logo_data_url || '';
+  return equipo?.logo_data_url || (equipo?.logo ? getMediaUrl(equipo.logo) : '');
 }
 
 function getPlayerPhotoSrc(jugador) {

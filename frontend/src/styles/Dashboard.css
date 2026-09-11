@@ -806,6 +806,40 @@
   justify-content: center;
 }
 
+.position-team {
+  align-items: center;
+  display: inline-flex;
+  gap: 10px;
+  min-width: 180px;
+}
+
+.position-team-logo {
+  background: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  flex: 0 0 auto;
+  height: 34px;
+  object-fit: contain;
+  padding: 3px;
+  width: 34px;
+}
+
+.position-team-logo.placeholder {
+  align-items: center;
+  background: #f0f4ff;
+  color: #4f66d8;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 900;
+  justify-content: center;
+}
+
+.position-team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dashboard-table th {
   color: #667085;
   font-size: 12px;

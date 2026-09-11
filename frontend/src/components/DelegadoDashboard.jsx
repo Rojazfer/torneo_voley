@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api, { getMediaUrl } from '../services/api';
 import FixtureMatch from './FixtureMatch';
+import PositionTeamCell from './PositionTeamCell';
 import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
@@ -414,7 +415,12 @@ export default function DelegadoDashboard() {
                   headers={['Pos', 'Equipo', 'PJ', 'PG', 'PP', 'SF', 'SC', 'PF', 'PC', 'DIF', 'PTS']}
                   rows={posicionesTorneo.map((row) => [
                     row.posicion,
-                    row.equipo_nombre,
+                    <PositionTeamCell
+                      key={`pos-${row.equipo}`}
+                      name={row.equipo_nombre}
+                      logoSrc={getTeamLogoSrc(equipoById[String(row.equipo)]) || getMediaUrl(row.equipo_logo)}
+                      highlighted={String(row.equipo) === String(miEquipo?.id)}
+                    />,
                     row.pj,
                     row.pg,
                     row.pp,
@@ -538,7 +544,7 @@ function formatSets(partido) {
 }
 
 function getTeamLogoSrc(equipo) {
-  return equipo?.logo_data_url || '';
+  return equipo?.logo_data_url || (equipo?.logo ? getMediaUrl(equipo.logo) : '');
 }
 
 function getPlayerPhotoSrc(jugador) {
