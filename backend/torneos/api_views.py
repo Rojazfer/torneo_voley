@@ -256,8 +256,10 @@ class PosicionesAPIView(APIView):
             equipo.id: {
                 'equipo': equipo.id,
                 'equipo_nombre': equipo.nombre,
+                'equipo_logo': equipo.logo_data_url,
                 'torneo': equipo.torneo_id,
                 'torneo_nombre': equipo.torneo.nombre,
+                'categoria': equipo.torneo.categoria or equipo.categoria,
                 'pj': 0,
                 'pg': 0,
                 'pp': 0,
@@ -317,9 +319,26 @@ class PosicionesAPIView(APIView):
             row['dif'] = row['pf'] - row['pc']
             posiciones.append(row)
 
-        posiciones.sort(key=lambda item: (item['pts'], item['pg'], item['dif'], item['pf']), reverse=True)
-        for index, row in enumerate(posiciones, start=1):
-            row['posicion'] = index
+        posiciones.sort(
+            key=lambda item: (
+                item['torneo_nombre'],
+                item['torneo'],
+                -(item['pts']),
+                -(item['pg']),
+                -(item['dif']),
+                -(item['pf']),
+            )
+        )
+
+        current_torneo = None
+        current_position = 0
+        for row in posiciones:
+            if row['torneo'] != current_torneo:
+                current_torneo = row['torneo']
+                current_position = 1
+            else:
+                current_position += 1
+            row['posicion'] = current_position
 
         return Response(posiciones)
 

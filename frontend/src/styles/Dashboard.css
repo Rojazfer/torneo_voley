@@ -943,6 +943,60 @@
   white-space: nowrap;
 }
 
+.position-groups {
+  display: grid;
+  gap: 22px;
+}
+
+.position-group {
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.position-group .table-wrap {
+  border-top: 1px solid #edf0f5;
+}
+
+.position-group .dashboard-table th {
+  background: #fbfcfe;
+}
+
+.position-group-header {
+  align-items: center;
+  background: linear-gradient(135deg, #11141a 0%, #7c1117 100%);
+  color: #ffffff;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 16px 18px;
+}
+
+.position-group-header span {
+  color: rgba(255, 255, 255, 0.72);
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.position-group-header h4 {
+  font-size: 18px;
+  font-weight: 900;
+  margin: 0;
+}
+
+.position-group-header strong {
+  background: rgba(255, 255, 255, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  flex: 0 0 auto;
+  font-size: 12px;
+  padding: 8px 11px;
+}
+
 .dashboard-table th {
   color: #667085;
   font-size: 12px;
@@ -1435,6 +1489,11 @@
 
   .coach-summary {
     grid-template-columns: 1fr;
+  }
+
+  .position-group-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .team-card,

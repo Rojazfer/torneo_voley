@@ -151,6 +151,10 @@ export default function AdminDashboard() {
     return [...new Set(values)];
   }, [torneos, equipos]);
 
+  const posicionesPorCategoria = useMemo(() => {
+    return buildPositionGroups(posiciones, torneoById, equipoById);
+  }, [posiciones, torneoById, equipoById]);
+
   const resultadoTorneos = useMemo(() => {
     const torneoIds = [...new Set(partidos.map((partido) => String(partido.torneo)).filter(Boolean))];
     return torneoIds
@@ -1401,28 +1405,44 @@ export default function AdminDashboard() {
             )}
 
             {activeMenu === 'posiciones' && (
-              <Panel title="Posiciones" subtitle="Tabla calculada desde partidos finalizados.">
-                <DataTable
-                  headers={['Pos', 'Equipo', 'Campeonato', 'PJ', 'PG', 'PP', 'SF', 'SC', 'PF', 'PC', 'DIF', 'PTS']}
-                  rows={posiciones.map((row) => [
-                    row.posicion,
-                    <PositionTeamCell
-                      key={`pos-${row.equipo}`}
-                      name={row.equipo_nombre}
-                      logoSrc={getTeamLogoSrc(equipoById[String(row.equipo)]) || getMediaUrl(row.equipo_logo)}
-                    />,
-                    row.torneo_nombre,
-                    row.pj,
-                    row.pg,
-                    row.pp,
-                    row.sf,
-                    row.sc,
-                    row.pf,
-                    row.pc,
-                    row.dif,
-                    row.pts,
-                  ])}
-                />
+              <Panel title="Posiciones" subtitle="Tablas separadas por categoria y calculadas desde partidos finalizados.">
+                {posicionesPorCategoria.length ? (
+                  <div className="position-groups">
+                    {posicionesPorCategoria.map((group) => (
+                      <section className="position-group" key={group.key}>
+                        <div className="position-group-header">
+                          <div>
+                            <span>{group.category}</span>
+                            <h4>{group.title}</h4>
+                          </div>
+                          <strong>{group.rows.length} equipos</strong>
+                        </div>
+                        <DataTable
+                          headers={['Pos', 'Equipo', 'PJ', 'PG', 'PP', 'SF', 'SC', 'PF', 'PC', 'DIF', 'PTS']}
+                          rows={group.rows.map((row) => [
+                            row.posicion,
+                            <PositionTeamCell
+                              key={`pos-${row.torneo}-${row.equipo}`}
+                              name={row.equipo_nombre}
+                              logoSrc={getTeamLogoSrc(equipoById[String(row.equipo)]) || getMediaUrl(row.equipo_logo)}
+                            />,
+                            row.pj,
+                            row.pg,
+                            row.pp,
+                            row.sf,
+                            row.sc,
+                            row.pf,
+                            row.pc,
+                            row.dif,
+                            row.pts,
+                          ])}
+                        />
+                      </section>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState text="Todavia no hay equipos inscritos para calcular posiciones." />
+                )}
               </Panel>
             )}
 
@@ -1662,6 +1682,36 @@ function formatSets(partido) {
   return partido.sets
     .map((set) => `${set.puntos_local}-${set.puntos_visitante}`)
     .join(' / ');
+}
+
+function buildPositionGroups(posiciones, torneoById, equipoById) {
+  const groups = new Map();
+
+  posiciones.forEach((row) => {
+    const torneo = torneoById[String(row.torneo)];
+    const equipo = equipoById[String(row.equipo)];
+    const category = row.categoria || torneo?.categoria || equipo?.categoria || 'Sin categoria';
+    const title = row.torneo_nombre || torneo?.nombre || category;
+    const key = `${row.torneo || title}-${category}`;
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        title,
+        category,
+        rows: [],
+      });
+    }
+
+    groups.get(key).rows.push(row);
+  });
+
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      rows: group.rows.slice().sort((a, b) => Number(a.posicion) - Number(b.posicion)),
+    }))
+    .sort((a, b) => `${a.category}-${a.title}`.localeCompare(`${b.category}-${b.title}`));
 }
 
 function getPartidoCategoria(partido, torneoById, equipoById) {
