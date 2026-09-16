@@ -126,7 +126,7 @@ export default function AdminDashboard() {
   const [editingUsuarioId, setEditingUsuarioId] = useState(null);
   const [fixtureForm, setFixtureForm] = useState(initialFixture);
   const [resultadoForm, setResultadoForm] = useState(initialResultado);
-  const [selectedResultadoCategoria, setSelectedResultadoCategoria] = useState('');
+  const [selectedResultadoTorneo, setSelectedResultadoTorneo] = useState('');
   const [editingPartidoId, setEditingPartidoId] = useState(null);
   const [partidoForm, setPartidoForm] = useState({
     fecha: '',
@@ -151,17 +151,20 @@ export default function AdminDashboard() {
     return [...new Set(values)];
   }, [torneos, equipos]);
 
-  const resultadoCategorias = useMemo(() => {
-    const values = partidos.map((partido) => getPartidoCategoria(partido, torneoById, equipoById));
-    return [...new Set(values)].sort((a, b) => a.localeCompare(b));
-  }, [partidos, torneoById, equipoById]);
+  const resultadoTorneos = useMemo(() => {
+    const torneoIds = [...new Set(partidos.map((partido) => String(partido.torneo)).filter(Boolean))];
+    return torneoIds
+      .map((torneoId) => ({
+        id: torneoId,
+        label: getResultadoTorneoLabel(torneoById[torneoId]),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [partidos, torneoById]);
 
   const resultadoPartidos = useMemo(() => {
-    if (!selectedResultadoCategoria) return partidos;
-    return partidos.filter((partido) => (
-      getPartidoCategoria(partido, torneoById, equipoById) === selectedResultadoCategoria
-    ));
-  }, [partidos, selectedResultadoCategoria, torneoById, equipoById]);
+    if (!selectedResultadoTorneo) return partidos;
+    return partidos.filter((partido) => String(partido.torneo) === String(selectedResultadoTorneo));
+  }, [partidos, selectedResultadoTorneo]);
 
   const selectedResultadoPartido = useMemo(() => {
     if (!resultadoForm.partido) return null;
@@ -1317,17 +1320,17 @@ export default function AdminDashboard() {
                   </form>
                 )}
                 <form className="dashboard-form" onSubmit={handleRegistrarResultado}>
-                  <Field label="Categoria" help="Filtra los partidos para encontrar rapido el encuentro correcto.">
+                  <Field label="Campeonato / categoria" help="Elige Damas, Varones u otro campeonato antes de seleccionar el partido.">
                     <select
-                      value={selectedResultadoCategoria}
+                      value={selectedResultadoTorneo}
                       onChange={(e) => {
-                        setSelectedResultadoCategoria(e.target.value);
+                        setSelectedResultadoTorneo(e.target.value);
                         setResultadoForm({ ...resultadoForm, partido: '' });
                       }}
                     >
-                      <option value="">Todas las categorias</option>
-                      {resultadoCategorias.map((categoria) => (
-                        <option key={categoria} value={categoria}>{categoria}</option>
+                      <option value="">Todos los campeonatos</option>
+                      {resultadoTorneos.map((torneo) => (
+                        <option key={torneo.id} value={torneo.id}>{torneo.label}</option>
                       ))}
                     </select>
                   </Field>
@@ -1336,7 +1339,7 @@ export default function AdminDashboard() {
                       <option value="">Seleccionar partido</option>
                       {resultadoPartidos.map((partido) => (
                         <option key={partido.id} value={partido.id}>
-                          {partido.equipo_local_nombre} vs {partido.equipo_visitante_nombre} - {partido.fecha} - {getPartidoCategoria(partido, torneoById, equipoById)}
+                          {partido.equipo_local_nombre} vs {partido.equipo_visitante_nombre} - {partido.fecha} - {getResultadoTorneoLabel(torneoById[String(partido.torneo)])}
                         </option>
                       ))}
                     </select>
@@ -1385,7 +1388,7 @@ export default function AdminDashboard() {
                       <button type="button" onClick={() => handleEditPartido(partido)}>Editar</button>
                       <button type="button" onClick={() => {
                         setResultadoForm({ ...resultadoForm, partido: String(partido.id) });
-                        setSelectedResultadoCategoria(getPartidoCategoria(partido, torneoById, equipoById));
+                        setSelectedResultadoTorneo(String(partido.torneo));
                         setNotice('Partido seleccionado para cargar resultado.');
                       }}>
                         Resultado
@@ -1668,6 +1671,12 @@ function getPartidoCategoria(partido, torneoById, equipoById) {
     equipoById[String(partido.equipo_visitante)]?.categoria ||
     'Sin categoria'
   );
+}
+
+function getResultadoTorneoLabel(torneo) {
+  if (!torneo) return 'Campeonato sin nombre';
+  const nombre = torneo.nombre || 'Campeonato';
+  return torneo.categoria ? `${nombre} - ${torneo.categoria}` : nombre;
 }
 
 function equipoByIdSafe(equiposById, equipoId) {
