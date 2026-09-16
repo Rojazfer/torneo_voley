@@ -126,6 +126,7 @@ export default function AdminDashboard() {
   const [editingUsuarioId, setEditingUsuarioId] = useState(null);
   const [fixtureForm, setFixtureForm] = useState(initialFixture);
   const [resultadoForm, setResultadoForm] = useState(initialResultado);
+  const [selectedResultadoCategoria, setSelectedResultadoCategoria] = useState('');
   const [editingPartidoId, setEditingPartidoId] = useState(null);
   const [partidoForm, setPartidoForm] = useState({
     fecha: '',
@@ -149,6 +150,23 @@ export default function AdminDashboard() {
     ].filter(Boolean);
     return [...new Set(values)];
   }, [torneos, equipos]);
+
+  const resultadoCategorias = useMemo(() => {
+    const values = partidos.map((partido) => getPartidoCategoria(partido, torneoById, equipoById));
+    return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+  }, [partidos, torneoById, equipoById]);
+
+  const resultadoPartidos = useMemo(() => {
+    if (!selectedResultadoCategoria) return partidos;
+    return partidos.filter((partido) => (
+      getPartidoCategoria(partido, torneoById, equipoById) === selectedResultadoCategoria
+    ));
+  }, [partidos, selectedResultadoCategoria, torneoById, equipoById]);
+
+  const selectedResultadoPartido = useMemo(() => {
+    if (!resultadoForm.partido) return null;
+    return partidos.find((partido) => String(partido.id) === String(resultadoForm.partido)) || null;
+  }, [partidos, resultadoForm.partido]);
 
   const fixtureEquipos = useMemo(() => {
     if (!fixtureForm.torneo) return [];
@@ -215,6 +233,14 @@ export default function AdminDashboard() {
 
     fetchData();
   }, [navigate]);
+
+  useEffect(() => {
+    if (!resultadoForm.partido) return;
+    const stillVisible = resultadoPartidos.some((partido) => String(partido.id) === String(resultadoForm.partido));
+    if (!stillVisible) {
+      setResultadoForm((current) => ({ ...current, partido: '' }));
+    }
+  }, [resultadoForm.partido, resultadoPartidos]);
 
   const handleLogout = () => {
     logout();
@@ -468,6 +494,24 @@ export default function AdminDashboard() {
     });
 
     setNotice(`PDF de credenciales generado para ${equipo.nombre}.`);
+  };
+
+  const handleDownloadTeamsReport = async () => {
+    if (!equipos.length) {
+      setError('Todavia no hay equipos inscritos para generar el reporte.');
+      return;
+    }
+
+    setError('');
+    setNotice('');
+
+    await downloadTeamsByCategoryPdf({
+      equipos,
+      jugadores,
+      torneoById,
+    });
+
+    setNotice('Reporte PDF de equipos inscritos generado correctamente.');
   };
 
   const handleDeleteJugador = async (jugadorId) => {
@@ -987,6 +1031,11 @@ export default function AdminDashboard() {
                     </button>
                   )}
                 </form>
+                <div className="panel-actions">
+                  <button className="action-btn primary" type="button" onClick={handleDownloadTeamsReport}>
+                    Descargar reporte por categorias
+                  </button>
+                </div>
                 <div className="team-list">
                   {equipos.length ? equipos.map((equipo) => {
                     const equipoJugadores = jugadores.filter((jugador) => String(jugador.equipo) === String(equipo.id));
@@ -1268,16 +1317,37 @@ export default function AdminDashboard() {
                   </form>
                 )}
                 <form className="dashboard-form" onSubmit={handleRegistrarResultado}>
+                  <Field label="Categoria" help="Filtra los partidos para encontrar rapido el encuentro correcto.">
+                    <select
+                      value={selectedResultadoCategoria}
+                      onChange={(e) => {
+                        setSelectedResultadoCategoria(e.target.value);
+                        setResultadoForm({ ...resultadoForm, partido: '' });
+                      }}
+                    >
+                      <option value="">Todas las categorias</option>
+                      {resultadoCategorias.map((categoria) => (
+                        <option key={categoria} value={categoria}>{categoria}</option>
+                      ))}
+                    </select>
+                  </Field>
                   <Field label="Partido jugado" help="El primer equipo es local; el segundo es visitante.">
                     <select value={resultadoForm.partido} onChange={(e) => setResultadoForm({ ...resultadoForm, partido: e.target.value })} required>
                       <option value="">Seleccionar partido</option>
-                      {partidos.map((partido) => (
+                      {resultadoPartidos.map((partido) => (
                         <option key={partido.id} value={partido.id}>
-                          {partido.equipo_local_nombre} vs {partido.equipo_visitante_nombre} - {partido.fecha}
+                          {partido.equipo_local_nombre} vs {partido.equipo_visitante_nombre} - {partido.fecha} - {getPartidoCategoria(partido, torneoById, equipoById)}
                         </option>
                       ))}
                     </select>
                   </Field>
+                  {selectedResultadoPartido && (
+                    <div className="result-match-card">
+                      <span>{getPartidoCategoria(selectedResultadoPartido, torneoById, equipoById)}</span>
+                      <FixtureMatch partido={selectedResultadoPartido} equiposById={equipoById} />
+                      <small>{selectedResultadoPartido.torneo_nombre} · {selectedResultadoPartido.fecha} {formatTime(selectedResultadoPartido.hora)} · {selectedResultadoPartido.lugar}</small>
+                    </div>
+                  )}
                   <div className="sets-grid">
                     <div className="set-row set-row-head">
                       <span>Set</span>
@@ -1298,16 +1368,24 @@ export default function AdminDashboard() {
                 </form>
                 <DataTable
                   headers={['Partido', 'Fecha', 'Resultado', 'Ganador', 'Puntos', 'Acciones']}
-                  rows={partidos.map((partido, index) => [
-                    `Partido ${index + 1}`,
+                  rows={resultadoPartidos.map((partido, index) => [
+                    <MatchCell key={`match-cell-${partido.id}`} label={`Partido ${index + 1}`} partido={partido} equiposById={equipoById} />,
                     `${partido.fecha} ${formatTime(partido.hora)} - ${partido.lugar}`,
                     formatSets(partido),
-                    partido.ganador_nombre || '-',
-                    `${partido.equipo_local_nombre}: ${partido.puntos_local} / ${partido.equipo_visitante_nombre}: ${partido.puntos_visitante}`,
+                    partido.ganador ? (
+                      <PositionTeamCell
+                        key={`winner-${partido.id}`}
+                        name={partido.ganador_nombre}
+                        logoSrc={getTeamLogoSrc(equipoById[String(partido.ganador)])}
+                        highlighted
+                      />
+                    ) : '-',
+                    <MatchPoints key={`points-${partido.id}`} partido={partido} equiposById={equipoById} />,
                     <div key={`partido-${partido.id}`} className="row-actions">
                       <button type="button" onClick={() => handleEditPartido(partido)}>Editar</button>
                       <button type="button" onClick={() => {
                         setResultadoForm({ ...resultadoForm, partido: String(partido.id) });
+                        setSelectedResultadoCategoria(getPartidoCategoria(partido, torneoById, equipoById));
                         setNotice('Partido seleccionado para cargar resultado.');
                       }}>
                         Resultado
@@ -1533,6 +1611,49 @@ function EmptyState({ text }) {
   return <div className="empty-state">{text}</div>;
 }
 
+function MatchCell({ label, partido, equiposById }) {
+  return (
+    <div className="match-table-cell">
+      <span className="match-table-label">{label}</span>
+      <FixtureMatch partido={partido} equiposById={equiposById} />
+    </div>
+  );
+}
+
+function MatchPoints({ partido, equiposById }) {
+  const local = equipoByIdSafe(equiposById, partido.equipo_local);
+  const visitante = equipoByIdSafe(equiposById, partido.equipo_visitante);
+
+  return (
+    <div className="match-points">
+      <TeamPoint
+        name={partido.equipo_local_nombre || local?.nombre}
+        logoSrc={partido.equipo_local_logo || getTeamLogoSrc(local)}
+        points={partido.puntos_local}
+      />
+      <TeamPoint
+        name={partido.equipo_visitante_nombre || visitante?.nombre}
+        logoSrc={partido.equipo_visitante_logo || getTeamLogoSrc(visitante)}
+        points={partido.puntos_visitante}
+      />
+    </div>
+  );
+}
+
+function TeamPoint({ name, logoSrc, points }) {
+  return (
+    <span className="team-point">
+      {logoSrc ? (
+        <img className="team-point-logo" src={logoSrc} alt={name || 'Equipo'} />
+      ) : (
+        <span className="team-point-logo placeholder">{getInitials(name)}</span>
+      )}
+      <span className="team-point-name">{name || 'Equipo'}</span>
+      <strong>{points ?? 0}</strong>
+    </span>
+  );
+}
+
 function formatSets(partido) {
   if (!partido.sets?.length) return '-';
   return partido.sets
@@ -1540,8 +1661,31 @@ function formatSets(partido) {
     .join(' / ');
 }
 
+function getPartidoCategoria(partido, torneoById, equipoById) {
+  return (
+    torneoById[String(partido.torneo)]?.categoria ||
+    equipoById[String(partido.equipo_local)]?.categoria ||
+    equipoById[String(partido.equipo_visitante)]?.categoria ||
+    'Sin categoria'
+  );
+}
+
+function equipoByIdSafe(equiposById, equipoId) {
+  return equiposById[String(equipoId)] || null;
+}
+
 function getTeamLogoSrc(equipo) {
   return equipo?.logo_data_url || (equipo?.logo ? getMediaUrl(equipo.logo) : '');
+}
+
+function getInitials(value) {
+  return String(value || 'EQ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
 }
 
 function getPlayerPhotoSrc(jugador) {
@@ -1694,6 +1838,139 @@ async function downloadFixturePdf({ torneo, partidos }) {
   doc.setFontSize(7.5);
   doc.text('Documento generado desde el Sistema de Torneos Ayacucho Club de Voleibol.', margin, 290);
   doc.save(`fixture-${slugify(title)}.pdf`);
+}
+
+async function downloadTeamsByCategoryPdf({ equipos, jugadores, torneoById }) {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+  const logoData = await toDataUrl(clubLogo);
+  const margin = 14;
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const groups = buildTeamsByCategoryGroups(equipos, jugadores, torneoById);
+  let y = 45;
+
+  drawReportHeader(doc, logoData, 'Equipos inscritos por categorias', `Total de equipos inscritos: ${equipos.length}`);
+  drawTeamsReportTableHeader(doc, margin, y);
+  y += 8;
+
+  groups.forEach((group) => {
+    if (y > pageHeight - 38) {
+      doc.addPage();
+      drawReportHeader(doc, logoData, 'Equipos inscritos por categorias', `Total de equipos inscritos: ${equipos.length}`);
+      y = 45;
+      drawTeamsReportTableHeader(doc, margin, y);
+      y += 8;
+    }
+
+    doc.setFillColor(248, 250, 252);
+    doc.rect(margin, y - 4.5, pageWidth - margin * 2, 8, 'F');
+    doc.setTextColor(17, 24, 39);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.4);
+    doc.text(`${group.torneo} / ${group.categoria}`, margin + 3, y);
+    doc.setFontSize(7.3);
+    doc.text(`${group.teams.length} equipo(s)`, pageWidth - margin - 3, y, { align: 'right' });
+    y += 8;
+
+    group.teams.forEach((team, index) => {
+      if (y > pageHeight - 20) {
+        doc.addPage();
+        drawReportHeader(doc, logoData, 'Equipos inscritos por categorias', `Total de equipos inscritos: ${equipos.length}`);
+        y = 45;
+        drawTeamsReportTableHeader(doc, margin, y);
+        y += 8;
+      }
+
+      doc.setDrawColor(229, 231, 235);
+      doc.line(margin, y + 4.8, pageWidth - margin, y + 4.8);
+      doc.setTextColor(17, 24, 39);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text(String(index + 1), margin + 3, y);
+      doc.text(team.name, margin + 16, y, { maxWidth: 62 });
+      doc.text(team.category, margin + 84, y, { maxWidth: 34 });
+      doc.text(String(team.playersCount), margin + 132, y, { align: 'center' });
+      doc.text(team.delegado, margin + 150, y, { maxWidth: 40 });
+      y += 8;
+    });
+
+    y += 3;
+  });
+
+  doc.setTextColor(107, 114, 128);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.2);
+  doc.text('Documento generado desde el Sistema de Torneos Ayacucho Club de Voleibol.', margin, 290);
+  doc.save('equipos-inscritos-por-categorias.pdf');
+}
+
+function drawReportHeader(doc, logoData, title, subtitle) {
+  const margin = 14;
+
+  doc.setFillColor(15, 15, 16);
+  doc.rect(0, 0, 210, 34, 'F');
+  doc.setFillColor(178, 17, 25);
+  doc.rect(0, 28, 210, 6, 'F');
+  doc.addImage(logoData, 'PNG', margin, 7, 18, 18);
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14.5);
+  doc.text('AYACUCHO CLUB DE VOLEIBOL', 36, 15);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.2);
+  doc.text(title, 36, 21);
+  doc.text(subtitle, 36, 26);
+}
+
+function drawTeamsReportTableHeader(doc, margin, y) {
+  doc.setFillColor(241, 245, 249);
+  doc.rect(margin, y - 5, 182, 8, 'F');
+  doc.setTextColor(71, 85, 105);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.4);
+  doc.text('N', margin + 3, y);
+  doc.text('EQUIPO', margin + 16, y);
+  doc.text('CATEGORIA', margin + 84, y);
+  doc.text('JUG.', margin + 132, y, { align: 'center' });
+  doc.text('DELEGADO', margin + 150, y);
+}
+
+function buildTeamsByCategoryGroups(equipos, jugadores, torneoById) {
+  const groups = new Map();
+
+  equipos
+    .slice()
+    .sort((a, b) => {
+      const torneoA = torneoById[String(a.torneo)]?.nombre || 'Sin torneo';
+      const torneoB = torneoById[String(b.torneo)]?.nombre || 'Sin torneo';
+      return `${torneoA}-${a.categoria}-${a.nombre}`.localeCompare(`${torneoB}-${b.categoria}-${b.nombre}`);
+    })
+    .forEach((equipo) => {
+      const torneo = torneoById[String(equipo.torneo)]?.nombre || 'Sin torneo';
+      const categoria = equipo.categoria || 'Sin categoria';
+      const key = `${torneo}__${categoria}`;
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          torneo,
+          categoria,
+          teams: [],
+        });
+      }
+
+      groups.get(key).teams.push({
+        name: equipo.nombre,
+        category: categoria,
+        playersCount: jugadores.filter((jugador) => String(jugador.equipo) === String(equipo.id)).length,
+        delegado: equipo.delegado_username || '-',
+      });
+    });
+
+  return Array.from(groups.values());
 }
 
 function drawFixtureHeader(doc, y) {

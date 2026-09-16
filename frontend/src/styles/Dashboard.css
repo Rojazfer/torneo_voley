@@ -469,6 +469,12 @@
   margin: 0;
 }
 
+.panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 18px;
+}
+
 .dashboard-form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -520,6 +526,36 @@
   font-size: 12px;
   line-height: 1.35;
   margin: 0;
+}
+
+.result-match-card {
+  align-self: stretch;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  min-height: 74px;
+  padding: 12px 14px;
+}
+
+.result-match-card span {
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.result-match-card strong {
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.result-match-card small {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .fixture-team-status {
@@ -804,6 +840,73 @@
   font-size: 11px;
   font-weight: 900;
   justify-content: center;
+}
+
+.match-table-cell {
+  display: grid;
+  gap: 7px;
+  min-width: 260px;
+}
+
+.match-table-label {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.match-points {
+  display: grid;
+  gap: 7px;
+  min-width: 220px;
+}
+
+.team-point {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 30px minmax(90px, 1fr) auto;
+}
+
+.team-point-logo {
+  background: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 7px;
+  height: 30px;
+  object-fit: contain;
+  padding: 3px;
+  width: 30px;
+}
+
+.team-point-logo.placeholder {
+  align-items: center;
+  background: #f0f4ff;
+  color: #4f66d8;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 900;
+  justify-content: center;
+}
+
+.team-point-name {
+  color: #344054;
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-point strong {
+  background: #f8fafc;
+  border: 1px solid #edf0f5;
+  border-radius: 6px;
+  color: #111827;
+  font-size: 13px;
+  min-width: 28px;
+  padding: 4px 7px;
+  text-align: center;
 }
 
 .position-team {
