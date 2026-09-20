@@ -220,7 +220,7 @@ export default function EscuelaDashboard() {
         <main className="dashboard-content">
           {error && <div className="error escuela-alert">{error}</div>}
           {notice && <div className="success-message">{notice}</div>}
-          {seccion === 'resumen' && <Resumen resumen={resumen} categorias={categorias} deudores={deudores} irA={setSeccion} />}
+          {seccion === 'resumen' && <Resumen resumen={resumen} categorias={categorias} deudores={deudores} irA={setSeccion} esAdmin={esAdmin} />}
           {seccion === 'categorias' && esAdmin && <Categorias categorias={categorias} entrenadores={entrenadores} form={categoriaForm} setForm={setCategoriaForm} guardar={guardarCategoria} editar={editarCategoria} cancelar={() => { setCategoriaForm(categoriaInicial); setEditandoCategoria(null); }} editando={editandoCategoria} saving={saving} eliminar={(categoria) => confirmarEliminar(`Eliminar la categoria ${categoria.nombre}?`, () => ejecutar(() => api.deleteCategoriaEscuela(categoria.id), 'Categoria eliminada.'))} />}
           {seccion === 'alumnos' && <Alumnos alumnos={alumnosFiltrados} categorias={categorias} entrenadores={entrenadores} form={alumnoForm} setForm={setAlumnoForm} guardar={guardarAlumno} editar={editarAlumno} cancelar={() => { setAlumnoForm(alumnoInicial); setEditandoAlumno(null); }} editando={editandoAlumno} saving={saving} esAdmin={esAdmin} filtro={filtroAlumno} setFiltro={setFiltroAlumno} filtroCategoria={filtroCategoria} setFiltroCategoria={setFiltroCategoria} />}
           {seccion === 'cobranza' && <Cobranza cobros={cobrosFiltrados} categorias={categorias} periodo={periodo} setPeriodo={setPeriodo} categoria={categoriaCobro} setCategoria={setCategoriaCobro} filtro={filtroCobro} setFiltro={setFiltroCobro} generar={generarCobros} pagoActivo={pagoActivo} setPagoActivo={setPagoActivo} pagoForm={pagoForm} setPagoForm={setPagoForm} registrarPago={registrarPago} saving={saving} />}
@@ -234,8 +234,97 @@ export default function EscuelaDashboard() {
   );
 }
 
-function Resumen({ resumen, categorias, deudores, irA }) {
-  return <><section className="welcome-section escuela-welcome"><div><h2>Administracion de la escuela</h2><p>Alumnos, categorias, mensualidades y comunicacion en un espacio independiente.</p></div></section><section className="stats-section"><Stat titulo="Alumnos activos" valor={resumen.alumnos_activos || 0} /><Stat titulo="Categorias" valor={resumen.categorias_activas || 0} /><Stat titulo="Cobros vencidos" valor={resumen.mensualidades_vencidas || 0} alerta /><Stat titulo="Saldo pendiente" valor={moneda(resumen.saldo_pendiente)} alerta /></section><section className="escuela-grid"><article className="data-panel"><div className="panel-header"><div><h3>Categorias activas</h3><p>Distribucion actual de alumnos.</p></div></div>{categorias.map((item) => <div className="summary-line" key={item.id}><span>{item.nombre}</span><strong>{item.total_alumnos || 0} alumnos</strong></div>)}</article><article className="data-panel"><div className="panel-header"><div><h3>Cobranza pendiente</h3><p>Mensualidades que requieren seguimiento.</p></div></div><div className="summary-big">{deudores.length}</div><button className="action-btn primary" type="button" onClick={() => irA('mensajes')}>Preparar recordatorios</button></article></section></>;
+function Resumen({ resumen, categorias, deudores, irA, esAdmin }) {
+  const facturado = Number(resumen.total_facturado || 0);
+  const cobrado = Number(resumen.total_cobrado || 0);
+  const avance = facturado > 0 ? Math.min(Math.round((cobrado / facturado) * 100), 100) : 0;
+  const categoriasActivas = categorias.filter((item) => item.activa);
+  const mayorCategoria = Math.max(...categoriasActivas.map((item) => Number(item.total_alumnos || 0)), 1);
+  const periodo = new Intl.DateTimeFormat('es-BO', { month: 'long', year: 'numeric' }).format(new Date());
+
+  return (
+    <div className="school-overview">
+      <section className="school-overview-heading">
+        <div>
+          <span className="overview-kicker">RESUMEN OPERATIVO</span>
+          <h2>Administracion de la escuela</h2>
+          <p>Consulta el estado de alumnos, grupos y cobranza desde un solo lugar.</p>
+        </div>
+        <div className="overview-period">
+          <span>Periodo actual</span>
+          <strong>{periodo}</strong>
+        </div>
+      </section>
+
+      <section className="school-kpi-grid" aria-label="Indicadores principales">
+        <Stat codigo="AL" titulo="Alumnos activos" valor={resumen.alumnos_activos || 0} detalle="Matriculados actualmente" tono="green" />
+        <Stat codigo="CA" titulo="Categorias activas" valor={resumen.categorias_activas || 0} detalle="Disponibles en la escuela" tono="blue" />
+        <Stat codigo="GR" titulo="Grupos activos" valor={resumen.grupos_activos || 0} detalle="Horarios habilitados" tono="violet" />
+        <Stat codigo="CO" titulo="Total cobrado" valor={moneda(cobrado)} detalle={`${avance}% de lo facturado`} tono="teal" />
+        <Stat codigo="PE" titulo="Saldo pendiente" valor={moneda(resumen.saldo_pendiente)} detalle={`${deudores.length} mensualidades por cobrar`} tono="amber" />
+        <Stat codigo="VE" titulo="Cobros vencidos" valor={resumen.mensualidades_vencidas || 0} detalle="Requieren seguimiento" tono="red" />
+      </section>
+
+      <section className="overview-actions" aria-label="Accesos rapidos">
+        <div>
+          <span>Accesos rapidos</span>
+          <strong>Continua con una tarea frecuente</strong>
+        </div>
+        <button type="button" onClick={() => irA('alumnos')}>Registrar alumno</button>
+        {esAdmin && <button type="button" onClick={() => irA('categorias')}>Crear categoria</button>}
+        <button type="button" onClick={() => irA('cobranza')}>Gestionar mensualidades</button>
+        <button type="button" onClick={() => irA('mensajes')}>Abrir WhatsApp</button>
+        <button type="button" onClick={() => irA('reportes')}>Ver reportes</button>
+      </section>
+
+      <section className="overview-content-grid">
+        <article className="data-panel category-overview-panel">
+          <div className="panel-header overview-panel-header">
+            <div>
+              <span className="panel-eyebrow">ALUMNOS</span>
+              <h3>Distribucion por categoria</h3>
+              <p>Cantidad de alumnos activos registrada en cada categoria.</p>
+            </div>
+            <strong>{resumen.alumnos_activos || 0} en total</strong>
+          </div>
+          {categoriasActivas.length ? (
+            <div className="category-overview-list">
+              {categoriasActivas.map((item) => {
+                const total = Number(item.total_alumnos || 0);
+                return (
+                  <div className="category-overview-row" key={item.id}>
+                    <div><strong>{item.nombre}</strong><span>{moneda(item.monto_mensual)} / mes</span></div>
+                    <div className="category-meter"><i style={{ width: `${Math.max((total / mayorCategoria) * 100, total ? 8 : 0)}%` }} /></div>
+                    <b>{total}</b>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="overview-empty"><strong>Aun no existen categorias activas</strong><span>Crea la primera categoria para comenzar a registrar alumnos.</span>{esAdmin && <button type="button" onClick={() => irA('categorias')}>Crear categoria</button>}</div>
+          )}
+        </article>
+
+        <article className="data-panel collection-overview-panel">
+          <div className="panel-header overview-panel-header">
+            <div>
+              <span className="panel-eyebrow">COBRANZA</span>
+              <h3>Estado financiero</h3>
+              <p>Avance acumulado de las mensualidades generadas.</p>
+            </div>
+          </div>
+          <div className="collection-progress-heading"><div><span>Cobrado</span><strong>{moneda(cobrado)}</strong></div><b>{avance}%</b></div>
+          <div className="collection-progress" aria-label={`${avance}% cobrado`}><i style={{ width: `${avance}%` }} /></div>
+          <div className="collection-totals"><div><span>Facturado</span><strong>{moneda(facturado)}</strong></div><div><span>Pendiente</span><strong>{moneda(resumen.saldo_pendiente)}</strong></div><div><span>Becas activas</span><strong>{resumen.becas_activas || 0}</strong></div></div>
+          <div className="debt-preview">
+            <div className="debt-preview-title"><strong>Seguimiento prioritario</strong><span>{deudores.length} pendientes</span></div>
+            {deudores.length ? deudores.slice(0, 3).map((item) => <div className="debt-preview-row" key={item.id}><div><strong>{item.alumno_nombre}</strong><span>{item.categoria_nombre}</span></div><b>{moneda(item.saldo)}</b></div>) : <p className="debt-clear">No hay mensualidades pendientes.</p>}
+          </div>
+          <div className="collection-buttons"><button type="button" onClick={() => irA('cobranza')}>Ver mensualidades</button><button className="primary" type="button" onClick={() => irA('mensajes')}>Preparar recordatorios</button></div>
+        </article>
+      </section>
+    </div>
+  );
 }
 
 function Categorias({ categorias, entrenadores, form, setForm, guardar, editar, cancelar, editando, saving, eliminar }) {
@@ -273,7 +362,7 @@ function AvisosAutomaticos({ alumnos, mensualidades }) {
 }
 
 function Campo({ label, children }) { return <label className="form-field"><span className="field-label">{label}</span>{children}</label>; }
-function Stat({ titulo, valor, alerta }) { return <article className={`stat-card escuela-stat ${alerta ? 'alerta' : ''}`}><div className="stat-content"><h3>{titulo}</h3><p className="stat-value">{valor}</p></div></article>; }
+function Stat({ codigo, titulo, valor, detalle, tono }) { return <article className={`school-kpi tone-${tono}`}><div className="school-kpi-top"><span>{codigo}</span><h3>{titulo}</h3></div><strong className="school-kpi-value">{valor}</strong><p>{detalle}</p></article>; }
 function Acciones({ children }) { return <div className="table-actions">{children}</div>; }
 function Tabla({ headers, rows }) { return <div className="table-wrap"><table className="dashboard-table"><thead><tr>{headers.map((h) => <th key={h}>{h}</th>)}</tr></thead><tbody>{rows.length ? rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j}>{cell}</td>)}</tr>) : <tr><td colSpan={headers.length} className="empty-cell">No hay registros.</td></tr>}</tbody></table></div>; }
 function EstadoCobro({ item }) { const texto = item.vencida ? 'VENCIDA' : item.estado; return <span className={`status-pill ${texto.toLowerCase()}`}>{texto}</span>; }
