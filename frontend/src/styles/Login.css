@@ -233,6 +233,24 @@
   opacity: 0.72;
 }
 
+.school-registration-link {
+  border: 1px solid #d7dbe2;
+  border-radius: 8px;
+  color: #272b33;
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 13px 16px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.school-registration-link:hover {
+  background: #f5f6f8;
+  border-color: #aeb4bf;
+}
+
 @media (max-width: 820px) {
   .login-container {
     align-items: flex-start;

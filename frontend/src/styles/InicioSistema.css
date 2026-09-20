@@ -1,0 +1,279 @@
+.system-home {
+  background: #f2f4f7;
+  color: #20242b;
+  min-height: 100vh;
+}
+
+.system-home-header {
+  background: #171a20;
+  border-bottom: 4px solid #b11119;
+  color: #fff;
+}
+
+.system-home-bar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 1180px;
+  min-height: 88px;
+  padding: 14px 24px;
+}
+
+.system-home-header h1,
+.system-home-header p {
+  margin: 0;
+}
+
+.system-home .brand-lockup {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  min-width: 0;
+}
+
+.system-home .club-logo {
+  background: #050505;
+  border-radius: 6px;
+  height: 58px;
+  object-fit: contain;
+  padding: 4px;
+  width: 58px;
+}
+
+.system-home-header h1 {
+  font-size: 18px;
+}
+
+.system-home-header p {
+  color: #c9cdd5;
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.system-user {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+.system-user div {
+  display: grid;
+  gap: 2px;
+  text-align: right;
+}
+
+.system-user strong {
+  font-size: 14px;
+}
+
+.system-user span {
+  color: #c9cdd5;
+  font-size: 12px;
+}
+
+.system-user button,
+.system-shortcuts button {
+  background: transparent;
+  border: 1px solid #69707c;
+  border-radius: 6px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 40px;
+  padding: 9px 14px;
+}
+
+.system-home-content {
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: 38px 24px;
+}
+
+.system-heading {
+  border-bottom: 1px solid #d9dde4;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+}
+
+.system-eyebrow {
+  color: #a3131a !important;
+  font-size: 12px;
+  font-weight: 900;
+  margin: 0 0 6px;
+}
+
+.system-heading h2 {
+  font-size: 28px;
+  margin: 0 0 8px;
+}
+
+.system-heading p {
+  color: #626975;
+  margin: 0;
+}
+
+.module-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.module-tile {
+  background: #fff;
+  border: 1px solid #dfe3e9;
+  border-radius: 8px;
+  display: grid;
+  gap: 20px;
+  min-height: 390px;
+  padding: 26px;
+}
+
+.module-tile-top {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.module-code {
+  align-items: center;
+  background: #20242b;
+  border-radius: 6px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 900;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.school-module .module-code {
+  background: #176044;
+}
+
+.module-status {
+  color: #19704d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.module-tile h3 {
+  font-size: 22px;
+  margin: 0 0 9px;
+}
+
+.module-tile p {
+  color: #626975;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.module-tile ul {
+  color: #444b55;
+  display: grid;
+  gap: 8px;
+  list-style-position: inside;
+  margin: 0;
+  padding: 0;
+}
+
+.module-tile > button {
+  align-self: end;
+  background: #b11119;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  min-height: 48px;
+  padding: 12px 18px;
+  width: 100%;
+}
+
+.school-module > button {
+  background: #176044;
+}
+
+.module-tile > button:hover {
+  filter: brightness(0.92);
+}
+
+.system-shortcuts {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dfe3e9;
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr auto auto;
+  margin-top: 20px;
+  padding: 18px 22px;
+}
+
+.system-shortcuts div {
+  display: grid;
+  gap: 3px;
+}
+
+.system-shortcuts span {
+  color: #6a717d;
+  font-size: 12px;
+}
+
+.system-shortcuts strong {
+  font-size: 14px;
+}
+
+.system-shortcuts button {
+  border-color: #c8cdd5;
+  color: #252a32;
+}
+
+.system-shortcuts a {
+  color: #176044;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .system-home-bar,
+  .system-user,
+  .system-shortcuts {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .system-home-bar {
+    display: grid;
+    gap: 14px;
+  }
+
+  .system-user {
+    display: grid;
+  }
+
+  .system-user div {
+    text-align: left;
+  }
+
+  .system-home-content {
+    padding: 24px 16px;
+  }
+
+  .system-home-header h1 {
+    font-size: 15px;
+  }
+
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .module-tile {
+    min-height: 0;
+  }
+}

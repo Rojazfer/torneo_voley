@@ -1,0 +1,22 @@
+.public-school-page { background: #eef3f1; color: #1d2924; min-height: 100vh; }
+.public-school-page > header { align-items: center; background: #174f3b; color: white; display: flex; justify-content: space-between; padding: 18px clamp(18px, 5vw, 72px); }
+.public-school-page > header > a { color: white; font-weight: 700; }
+.public-brand { align-items: center; display: flex; gap: 14px; }
+.public-brand img { background: white; border-radius: 8px; height: 58px; object-fit: contain; padding: 4px; width: 58px; }
+.public-brand h1 { font-size: 22px; margin: 0; }
+.public-brand p { margin: 4px 0 0; }
+.public-form-wrap { background: white; border-radius: 8px; margin: 32px auto; max-width: 960px; padding: clamp(22px, 4vw, 42px); }
+.public-form-heading h2 { margin: 0 0 8px; }
+.public-form-heading p { color: #65716b; margin: 0 0 24px; }
+.public-form-wrap form { display: grid; gap: 15px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.public-form-wrap label { display: grid; font-size: 13px; font-weight: 700; gap: 6px; }
+.public-form-wrap input, .public-form-wrap select, .public-form-wrap textarea { border: 1px solid #ccd7d1; border-radius: 7px; font: inherit; min-height: 44px; padding: 10px 12px; }
+.public-form-wrap textarea { min-height: 90px; resize: vertical; }
+.public-form-wrap .wide, .public-form-wrap button { grid-column: 1 / -1; }
+.public-form-wrap button { background: #19724f; border: 0; border-radius: 7px; color: white; cursor: pointer; font: inherit; font-weight: 800; min-height: 48px; }
+.public-form-wrap footer { border-top: 1px solid #e1e7e4; margin-top: 24px; padding-top: 18px; }
+.public-form-wrap footer a { color: #14613f; font-weight: 800; }
+.public-success, .public-error { border-radius: 7px; margin-bottom: 18px; padding: 13px; }
+.public-success { background: #e6f5ec; color: #15603c; }
+.public-error { background: #fff0ef; color: #a2342f; }
+@media (max-width: 680px) { .public-school-page > header { align-items: flex-start; gap: 15px; } .public-brand h1 { font-size: 17px; } .public-form-wrap { margin: 14px; } .public-form-wrap form { grid-template-columns: 1fr; } .public-form-wrap .wide, .public-form-wrap button { grid-column: auto; } }

@@ -1,0 +1,2 @@
+export const GERENTE_CELULAR = '78339748';
+export const GERENTE_WHATSAPP = `591${GERENTE_CELULAR}`;

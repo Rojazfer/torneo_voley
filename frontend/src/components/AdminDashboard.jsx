@@ -891,6 +891,9 @@ export default function AdminDashboard() {
           </div>
           <div className="user-info">
             <span className="user-name">{user?.first_name || user?.username}</span>
+            <button className="logout-btn" type="button" onClick={() => navigate('/inicio')}>
+              Inicio
+            </button>
             <button className="logout-btn" onClick={handleLogout}>
               Cerrar Sesion
             </button>
@@ -1506,7 +1509,7 @@ export default function AdminDashboard() {
             )}
 
             {activeMenu === 'usuarios' && (
-              <Panel title="Usuarios" subtitle="Crea y administra cuentas de administradores, entrenadores y delegados.">
+              <Panel title="Usuarios" subtitle="Crea y administra cuentas de administradores, entrenadores, tutores y delegados.">
                 <form className="dashboard-form" onSubmit={handleSaveUsuario}>
                   <input placeholder="Usuario" value={usuarioForm.username} onChange={(e) => setUsuarioForm({ ...usuarioForm, username: e.target.value })} required />
                   <input placeholder={editingUsuarioId ? 'Nueva contraseña opcional' : 'Contraseña'} type="password" value={usuarioForm.password} onChange={(e) => setUsuarioForm({ ...usuarioForm, password: e.target.value })} required={!editingUsuarioId} />
@@ -1514,6 +1517,7 @@ export default function AdminDashboard() {
                     <option value="ENTRENADOR">Entrenador</option>
                     <option value="DELEGADO">Delegado</option>
                     <option value="ADMIN">Administrador</option>
+                    <option value="TUTOR">Padre, madre o tutor</option>
                   </select>
                   <input placeholder="Nombre" value={usuarioForm.first_name} onChange={(e) => setUsuarioForm({ ...usuarioForm, first_name: e.target.value })} />
                   <input placeholder="Apellido" value={usuarioForm.last_name} onChange={(e) => setUsuarioForm({ ...usuarioForm, last_name: e.target.value })} />

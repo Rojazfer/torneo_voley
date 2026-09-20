@@ -1,0 +1,98 @@
+MODULO AUTONOMO: ESCUELA DE VOLEY
+
+Este modulo es independiente de torneos. Comparte usuarios e inicio de sesion,
+pero sus alumnos, categorias, grupos, cobros, reportes y operaciones pertenecen
+exclusivamente a la escuela.
+
+ALCANCE IMPLEMENTADO
+
+[X] Categorias personalizables (Sub 8, Sub 10, Sub 12, etc.)
+    - Rango de edad, mensualidad, vencimiento, descripcion y entrenadores.
+    - Categorias activas o inactivas.
+
+[X] Alumnos y tutores
+    - Datos personales, documentos, contacto y estado.
+    - Responsable principal y contacto alternativo.
+    - Cuenta de tutor vinculada para ingresar al portal familiar.
+
+[X] Grupos y horarios
+    - Varios grupos por categoria.
+    - Dias, horas, cancha, entrenador y capacidad maxima.
+    - Cambios temporales de horario.
+
+[X] Inscripcion publica en linea
+    - Formulario disponible sin iniciar sesion.
+    - Seleccion de categoria y grupo con cupos disponibles.
+    - Revision, aprobacion o rechazo por el administrador.
+    - Ingreso automatico a lista de espera cuando el grupo esta lleno.
+
+[X] Mensualidades y cobranza
+    - Generacion mensual masiva por categoria o para toda la escuela.
+    - Pagos completos y parciales.
+    - Estado pendiente, parcial, pagado o anulado.
+    - Historial, deuda acumulada por familia y estado de cuenta.
+    - Recibos numerados y comprobantes en PDF.
+    - Caja por usuario y metodo de pago.
+
+[X] Descuentos y becas
+    - Porcentaje o monto fijo.
+    - Vigencia, motivo y autorizacion.
+    - Mensualidad personalizada por alumno.
+
+[X] Comunicacion por WhatsApp
+    - Plantillas para recordatorios, vencimientos, deudas, pagos y avisos.
+    - Enlaces preparados de WhatsApp para envios manuales.
+    - Uso de WhatsApp normal mediante la aplicacion o WhatsApp Web.
+    - Telefono del gerente: 78339748.
+
+[X] Portal de padres o tutores
+    - Hijos vinculados, mensualidades, pagos y horarios.
+    - Evaluaciones, documentos, uniformes y materiales.
+    - Acceso aislado: cada tutor solo puede ver su familia.
+
+[X] Gestion deportiva y medica
+    - Evaluaciones de saque, recepcion, ataque, bloqueo, defensa y fisico.
+    - Historial y grafico de evolucion.
+    - Ficha medica, alergias, lesiones, medicamentos y seguro.
+    - Documentos adjuntos y alertas de vencimiento.
+
+[X] Uniformes, materiales e inventario
+    - Entregas de uniformes y prestamos de materiales.
+    - Catalogo por producto, tipo y talla.
+    - Stock, stock minimo, costo y precio.
+    - Entradas, salidas, ajustes y control de stock insuficiente.
+
+[X] Gastos y resultado financiero
+    - Gastos por categoria, fecha, metodo y comprobante.
+    - Total de ingresos, gastos y saldo del periodo.
+    - Acceso exclusivo del administrador.
+
+[X] Reportes
+    - Esperado, cobrado, pendiente y cumplimiento por categoria.
+    - Ingresos diarios y mensuales.
+    - Morosidad, deuda por familia, edades y estados de alumnos.
+    - Exportacion PDF, Excel y CSV.
+
+[X] Seguridad y auditoria
+    - Roles Administrador, Entrenador y Tutor.
+    - Datos financieros, inventario, solicitudes y auditoria solo para admin.
+    - Registro de altas, cambios, cobros y movimientos administrativos.
+
+[X] Ventana principal y nuevo formato
+    - Selector independiente para ingresar a Torneos o Escuela.
+    - Acceso principal para administradores y entrenadores.
+    - Cabeceras con regreso a Inicio y cierre de sesion.
+    - Diseno adaptable para computadora y celular.
+
+FUERA DEL ALCANCE POR DECISION
+
+[ ] Control de asistencia.
+[ ] Recargos o multas por pagos atrasados.
+
+ESTADO DE VALIDACION
+
+[X] Migraciones creadas y aplicadas.
+[X] Django check sin errores.
+[X] 13 pruebas del modulo Escuela aprobadas.
+[X] Frontend compila correctamente.
+[X] Lint sin errores del modulo.

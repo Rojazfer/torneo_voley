@@ -51,6 +51,7 @@ class Usuario(AbstractUser):
         ADMIN = "ADMIN", "Administrador"
         DELEGADO = "DELEGADO", "Delegado"
         ENTRENADOR = "ENTRENADOR", "Entrenador"
+        TUTOR = "TUTOR", "Padre, madre o tutor"
 
     email = models.EmailField(
         unique=True,

@@ -363,6 +363,9 @@ export default function EntrenadorDashboard() {
           </div>
           <div className="user-info">
             <span className="user-name">{user?.first_name || user?.username}</span>
+            <button className="logout-btn" type="button" onClick={() => navigate('/inicio')}>
+              Inicio
+            </button>
             <button className="logout-btn" onClick={handleLogout}>
               Cerrar Sesion
             </button>

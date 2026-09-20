@@ -101,8 +101,9 @@ export const getDashboardStats = async () => {
 
 const request = async (endpoint, options = {}) => {
   const isFormData = options.body instanceof FormData;
+  const token = getToken();
   const headers = {
-    ...(isFormData ? { 'Authorization': `Bearer ${getToken()}` } : getAuthHeaders()),
+    ...(isFormData ? (token ? { 'Authorization': `Bearer ${token}` } : {}) : getAuthHeaders()),
     ...(options.headers || {}),
   };
 
@@ -211,6 +212,92 @@ export const deleteUsuario = (id) => request(`/usuarios/${id}/`, {
   method: 'DELETE',
 });
 
+export const getResumenEscuela = () => request('/escuela/resumen/');
+export const getCategoriasEscuela = () => request('/escuela/categorias/');
+export const createCategoriaEscuela = (data) => request('/escuela/categorias/', {
+  method: 'POST',
+  body: JSON.stringify(data),
+});
+export const updateCategoriaEscuela = (id, data) => request(`/escuela/categorias/${id}/`, {
+  method: 'PATCH',
+  body: JSON.stringify(data),
+});
+export const deleteCategoriaEscuela = (id) => request(`/escuela/categorias/${id}/`, { method: 'DELETE' });
+
+export const getAlumnosEscuela = () => request('/escuela/alumnos/');
+export const createAlumnoEscuela = (data) => request('/escuela/alumnos/', {
+  method: 'POST',
+  body: JSON.stringify(data),
+});
+export const updateAlumnoEscuela = (id, data) => request(`/escuela/alumnos/${id}/`, {
+  method: 'PATCH',
+  body: JSON.stringify(data),
+});
+export const deleteAlumnoEscuela = (id) => request(`/escuela/alumnos/${id}/`, { method: 'DELETE' });
+
+export const getMensualidadesEscuela = () => request('/escuela/mensualidades/');
+export const generarMensualidadesEscuela = (data) => request('/escuela/mensualidades/generar/', {
+  method: 'POST',
+  body: JSON.stringify(data),
+});
+export const updateMensualidadEscuela = (id, data) => request(`/escuela/mensualidades/${id}/`, {
+  method: 'PATCH',
+  body: JSON.stringify(data),
+});
+export const createPagoEscuela = (data) => request('/escuela/pagos/', {
+  method: 'POST',
+  body: JSON.stringify(data),
+});
+export const deletePagoEscuela = (id) => request(`/escuela/pagos/${id}/`, { method: 'DELETE' });
+
+export const getPlantillasEscuela = () => request('/escuela/plantillas/');
+export const createPlantillaEscuela = (data) => request('/escuela/plantillas/', {
+  method: 'POST',
+  body: JSON.stringify(data),
+});
+export const updatePlantillaEscuela = (id, data) => request(`/escuela/plantillas/${id}/`, {
+  method: 'PATCH',
+  body: JSON.stringify(data),
+});
+export const deletePlantillaEscuela = (id) => request(`/escuela/plantillas/${id}/`, { method: 'DELETE' });
+export const registrarMensajeEscuela = (data) => request('/escuela/mensajes/', {
+  method: 'POST',
+  body: JSON.stringify(data),
+});
+
+const escuelaCrud = (ruta) => ({
+  list: () => request(`/escuela/${ruta}/`),
+  create: (data) => request(`/escuela/${ruta}/`, { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/escuela/${ruta}/${id}/`, { method: 'PATCH', body: JSON.stringify(data) }),
+  remove: (id) => request(`/escuela/${ruta}/${id}/`, { method: 'DELETE' }),
+});
+
+export const gruposEscuela = escuelaCrud('grupos');
+export const cambiosHorarioEscuela = escuelaCrud('cambios-horario');
+export const descuentosEscuela = escuelaCrud('descuentos');
+export const evaluacionesEscuela = escuelaCrud('evaluaciones');
+export const fichasMedicasEscuela = escuelaCrud('fichas-medicas');
+export const uniformesEscuela = escuelaCrud('uniformes');
+export const materialesEscuela = escuelaCrud('materiales');
+export const getReportesEscuela = () => request('/escuela/reportes/');
+export const getDocumentosEscuela = () => request('/escuela/documentos/');
+export const createDocumentoEscuela = (data) => request('/escuela/documentos/', {
+  method: 'POST',
+  body: toFormData(data),
+});
+export const deleteDocumentoEscuela = (id) => request(`/escuela/documentos/${id}/`, { method: 'DELETE' });
+export const getCatalogoInscripcion = () => request('/escuela/publico/catalogo/');
+export const createSolicitudInscripcion = (data) => request('/escuela/publico/solicitudes/', { method: 'POST', body: JSON.stringify(data) });
+export const getSolicitudesInscripcion = () => request('/escuela/solicitudes/');
+export const revisarSolicitudInscripcion = (id, data) => request(`/escuela/solicitudes/${id}/revisar/`, { method: 'PATCH', body: JSON.stringify(data) });
+export const listaEsperaEscuela = escuelaCrud('lista-espera');
+export const gastosEscuela = escuelaCrud('gastos');
+export const inventarioEscuela = escuelaCrud('inventario');
+export const getMovimientosInventario = () => request('/escuela/inventario-movimientos/');
+export const createMovimientoInventario = (data) => request('/escuela/inventario-movimientos/', { method: 'POST', body: JSON.stringify(data) });
+export const getAuditoriaEscuela = () => request('/escuela/auditoria/');
+export const getPortalTutor = () => request('/escuela/portal-tutor/');
+
 // Logout
 export const logout = () => {
   clearTokens();
@@ -220,7 +307,7 @@ export const logout = () => {
 export const getAuthHeaders = () => {
   const token = getToken();
   return {
-    'Authorization': `Bearer ${token}`,
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     'Content-Type': 'application/json',
   };
 };
@@ -254,6 +341,47 @@ export default {
   createUsuario,
   updateUsuario,
   deleteUsuario,
+  getResumenEscuela,
+  getCategoriasEscuela,
+  createCategoriaEscuela,
+  updateCategoriaEscuela,
+  deleteCategoriaEscuela,
+  getAlumnosEscuela,
+  createAlumnoEscuela,
+  updateAlumnoEscuela,
+  deleteAlumnoEscuela,
+  getMensualidadesEscuela,
+  generarMensualidadesEscuela,
+  updateMensualidadEscuela,
+  createPagoEscuela,
+  deletePagoEscuela,
+  getPlantillasEscuela,
+  createPlantillaEscuela,
+  updatePlantillaEscuela,
+  deletePlantillaEscuela,
+  registrarMensajeEscuela,
+  gruposEscuela,
+  cambiosHorarioEscuela,
+  descuentosEscuela,
+  evaluacionesEscuela,
+  fichasMedicasEscuela,
+  uniformesEscuela,
+  materialesEscuela,
+  getReportesEscuela,
+  getDocumentosEscuela,
+  createDocumentoEscuela,
+  deleteDocumentoEscuela,
+  getCatalogoInscripcion,
+  createSolicitudInscripcion,
+  getSolicitudesInscripcion,
+  revisarSolicitudInscripcion,
+  listaEsperaEscuela,
+  gastosEscuela,
+  inventarioEscuela,
+  getMovimientosInventario,
+  createMovimientoInventario,
+  getAuditoriaEscuela,
+  getPortalTutor,
   logout,
   getToken,
   getAuthHeaders,

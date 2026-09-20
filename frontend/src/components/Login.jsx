@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Login.css';
 
 const getDashboardPath = (user) => {
-  if (user?.rol === 'ADMIN') return '/admin/dashboard';
-  if (user?.rol === 'ENTRENADOR') return '/entrenador/dashboard';
+  if (user?.rol === 'ADMIN' || user?.rol === 'ENTRENADOR') return '/inicio';
   if (user?.rol === 'DELEGADO') return '/delegado/dashboard';
+  if (user?.rol === 'TUTOR') return '/tutor/dashboard';
   return '/';
 };
 
@@ -113,6 +113,10 @@ export default function Login() {
           <button type="submit" disabled={loading} className={loading ? 'loading' : ''}>
             {loading ? 'Iniciando sesion...' : 'Iniciar sesion'}
           </button>
+
+          <Link className="school-registration-link" to="/escuela/inscripcion">
+            Inscribir alumno en la escuela
+          </Link>
         </form>
       </section>
     </div>

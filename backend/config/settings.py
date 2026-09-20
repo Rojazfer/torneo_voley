@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     # Aplicaciones propias
     'cuentas',
     'torneos',
+    'escuela',
 ]
 
 
