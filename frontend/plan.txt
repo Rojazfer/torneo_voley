@@ -102,3 +102,7 @@ ESTADO DE VALIDACION
 [X] 13 pruebas del modulo Escuela aprobadas.
 [X] Frontend compila correctamente.
 [X] Lint sin errores del modulo.
+ACCESO DEL MODULO ESCUELA
+- El panel y las API administrativas de la Escuela son exclusivos para usuarios ADMIN.
+- Entrenadores y delegados no pueden ingresar ni consultar datos de alumnos, cobros o gestion interna.
+- El formulario publico de inscripcion permanece disponible para las familias.

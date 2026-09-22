@@ -7,6 +7,7 @@ import '../styles/InicioSistema.css';
 export default function InicioSistema() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const esAdmin = user?.rol === 'ADMIN';
   const rutaTorneos = user?.rol === 'ADMIN' ? '/admin/dashboard' : '/entrenador/dashboard';
 
   const salir = () => {
@@ -60,34 +61,38 @@ export default function InicioSistema() {
             <button type="button" onClick={() => navigate(rutaTorneos)}>Ingresar a Torneos</button>
           </article>
 
-          <article className="module-tile school-module">
-            <div className="module-tile-top">
-              <span className="module-code">EV</span>
-              <span className="module-status">Disponible</span>
-            </div>
-            <div>
-              <h3>Escuela de voleibol</h3>
-              <p>Alumnos, categorias, grupos, mensualidades, mensajes, evaluaciones e inventario.</p>
-            </div>
-            <ul>
-              <li>Gestion academica</li>
-              <li>Cobranza y reportes</li>
-              <li>WhatsApp web o aplicacion</li>
-            </ul>
-            <button type="button" onClick={() => navigate('/escuela/dashboard')}>Ingresar a Escuela</button>
-          </article>
+          {esAdmin && (
+            <article className="module-tile school-module">
+              <div className="module-tile-top">
+                <span className="module-code">EV</span>
+                <span className="module-status">Disponible</span>
+              </div>
+              <div>
+                <h3>Escuela de voleibol</h3>
+                <p>Alumnos, categorias, grupos, mensualidades, mensajes, evaluaciones e inventario.</p>
+              </div>
+              <ul>
+                <li>Gestion academica</li>
+                <li>Cobranza y reportes</li>
+                <li>WhatsApp web o aplicacion</li>
+              </ul>
+              <button type="button" onClick={() => navigate('/escuela/dashboard')}>Ingresar a Escuela</button>
+            </article>
+          )}
         </section>
 
-        <section className="system-shortcuts">
-          <div>
-            <span>Inscripcion publica</span>
-            <strong>Formulario para nuevos alumnos</strong>
-          </div>
-          <button type="button" onClick={() => navigate('/escuela/inscripcion')}>Abrir formulario</button>
-          <a href={`https://wa.me/${GERENTE_WHATSAPP}`} target="_blank" rel="noreferrer">
-            WhatsApp gerente {GERENTE_CELULAR}
-          </a>
-        </section>
+        {esAdmin && (
+          <section className="system-shortcuts">
+            <div>
+              <span>Inscripcion publica</span>
+              <strong>Formulario para nuevos alumnos</strong>
+            </div>
+            <button type="button" onClick={() => navigate('/escuela/inscripcion')}>Abrir formulario</button>
+            <a href={`https://wa.me/${GERENTE_WHATSAPP}`} target="_blank" rel="noreferrer">
+              WhatsApp gerente {GERENTE_CELULAR}
+            </a>
+          </section>
+        )}
       </main>
     </div>
   );

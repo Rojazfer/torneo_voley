@@ -40,7 +40,7 @@ def es_entrenador(user):
 
 class EsUsuarioEscuela(permissions.BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and (es_admin(request.user) or es_entrenador(request.user)))
+        return bool(request.user and request.user.is_authenticated and es_admin(request.user))
 
 
 class SoloAdminOConsulta(EsUsuarioEscuela):

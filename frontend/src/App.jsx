@@ -95,7 +95,7 @@ function AppRoutes() {
       <Route
         path="/escuela/dashboard"
         element={
-          <ProtectedRoute roles={['ADMIN', 'ENTRENADOR']}>
+          <ProtectedRoute roles={['ADMIN']}>
             <EscuelaDashboard />
           </ProtectedRoute>
         }

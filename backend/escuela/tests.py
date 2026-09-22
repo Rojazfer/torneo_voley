@@ -17,6 +17,7 @@ class EscuelaAPITests(APITestCase):
         self.admin = User.objects.create_user(username='admin-escuela', email='admin@escuela.test', password='clave', rol='ADMIN')
         self.entrenador = User.objects.create_user(username='coach-escuela', email='coach@escuela.test', password='clave', rol='ENTRENADOR')
         self.otro_entrenador = User.objects.create_user(username='otro-coach', email='otro@escuela.test', password='clave', rol='ENTRENADOR')
+        self.delegado = User.objects.create_user(username='delegado-escuela', email='delegado@escuela.test', password='clave', rol='DELEGADO')
         self.categoria = CategoriaEscuela.objects.create(nombre='Sub 10', edad_minima=8, edad_maxima=10, monto_mensual=Decimal('150.00'), dia_vencimiento=10)
         self.categoria.entrenadores.add(self.entrenador)
         self.alumno = Alumno.objects.create(
@@ -76,7 +77,7 @@ class EscuelaAPITests(APITestCase):
         response = self.client.post('/api/escuela/pagos/', {'mensualidad': mensualidad.id, 'monto': '50.00', 'fecha_pago': '2026-09-05', 'metodo': 'EFECTIVO'}, format='json')
         self.assertEqual(response.status_code, 403)
 
-    def test_entrenador_solo_ve_sus_alumnos(self):
+    def test_entrenador_no_puede_ver_alumnos_de_escuela(self):
         otra_categoria = CategoriaEscuela.objects.create(nombre='Sub 14', monto_mensual=Decimal('180.00'))
         Alumno.objects.create(
             categoria=otra_categoria,
@@ -89,8 +90,14 @@ class EscuelaAPITests(APITestCase):
         )
         self.client.force_authenticate(self.entrenador)
         response = self.client.get('/api/escuela/alumnos/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual([item['documento'] for item in response.data], ['AL-001'])
+        self.assertEqual(response.status_code, 403)
+
+    def test_delegado_no_puede_acceder_a_la_escuela(self):
+        self.client.force_authenticate(self.delegado)
+
+        self.assertEqual(self.client.get('/api/escuela/resumen/').status_code, 403)
+        self.assertEqual(self.client.get('/api/escuela/alumnos/').status_code, 403)
+        self.assertEqual(self.client.get('/api/escuela/mensualidades/').status_code, 403)
 
     def test_beca_y_descuento_se_aplican_sin_recargo(self):
         DescuentoAlumno.objects.create(
@@ -308,9 +315,9 @@ class EscuelaAPITests(APITestCase):
         self.assertEqual(perfil.nombre_completo, 'Daniel Rojas')
         self.assertFalse(self.entrenador.is_active)
 
-    def test_entrenador_puede_consultar_fichas_pero_no_crearlas(self):
+    def test_entrenador_no_puede_consultar_ni_crear_fichas(self):
         EntrenadorEscuela.objects.create(usuario=self.entrenador)
         self.client.force_authenticate(self.entrenador)
 
-        self.assertEqual(self.client.get('/api/escuela/entrenadores/').status_code, 200)
+        self.assertEqual(self.client.get('/api/escuela/entrenadores/').status_code, 403)
         self.assertEqual(self.client.post('/api/escuela/entrenadores/', {}, format='json').status_code, 403)
