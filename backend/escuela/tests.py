@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 
 from .models import (
-    Alumno, CategoriaEscuela, DescuentoAlumno, GrupoEntrenamiento, ListaEspera,
+    Alumno, CategoriaEscuela, DescuentoAlumno, EntrenadorEscuela, GrupoEntrenamiento, ListaEspera,
     Mensualidad, Pago, ProductoInventario, RegistroAuditoria, SolicitudInscripcion,
 )
 
@@ -271,3 +271,46 @@ class EscuelaAPITests(APITestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertTrue(RegistroAuditoria.objects.filter(modelo='ProductoInventario', accion='CREAR').exists())
+
+    def test_admin_registra_entrenador_con_nombre_real_y_cuenta(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.post('/api/escuela/entrenadores/', {
+            'username': 'coach-real',
+            'password': 'clave-segura',
+            'first_name': 'Gabriela',
+            'last_name': 'Flores Quispe',
+            'documento': 'CI-9988',
+            'telefono': '76543210',
+            'email': 'gabriela@escuela.test',
+            'especialidad': 'Categorias formativas',
+            'fecha_ingreso': '2026-09-01',
+            'activo': True,
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        perfil = EntrenadorEscuela.objects.select_related('usuario').get(documento='CI-9988')
+        self.assertEqual(perfil.nombre_completo, 'Gabriela Flores Quispe')
+        self.assertEqual(perfil.usuario.rol, 'ENTRENADOR')
+        self.assertTrue(perfil.usuario.check_password('clave-segura'))
+
+    def test_editar_entrenador_sincroniza_nombre_y_estado_de_cuenta(self):
+        perfil = EntrenadorEscuela.objects.create(usuario=self.entrenador, especialidad='Iniciacion')
+        self.client.force_authenticate(self.admin)
+        response = self.client.patch(f'/api/escuela/entrenadores/{perfil.id}/', {
+            'first_name': 'Daniel',
+            'last_name': 'Rojas',
+            'activo': False,
+        }, format='json')
+
+        perfil.refresh_from_db()
+        self.entrenador.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(perfil.nombre_completo, 'Daniel Rojas')
+        self.assertFalse(self.entrenador.is_active)
+
+    def test_entrenador_puede_consultar_fichas_pero_no_crearlas(self):
+        EntrenadorEscuela.objects.create(usuario=self.entrenador)
+        self.client.force_authenticate(self.entrenador)
+
+        self.assertEqual(self.client.get('/api/escuela/entrenadores/').status_code, 200)
+        self.assertEqual(self.client.post('/api/escuela/entrenadores/', {}, format='json').status_code, 403)

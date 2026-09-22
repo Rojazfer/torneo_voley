@@ -13,6 +13,7 @@ import '../styles/Escuela.css';
 const menu = [
   { id: 'resumen', icon: 'IN', label: 'Resumen' },
   { id: 'alumnos', icon: 'AL', label: 'Alumnos' },
+  { id: 'entrenadores', icon: 'EN', label: 'Entrenadores' },
   { id: 'categorias', icon: 'CA', label: 'Categorias' },
   { id: 'grupos', icon: 'GH', label: 'Grupos y horarios' },
   { id: 'beneficios', icon: 'BE', label: 'Becas y descuentos' },
@@ -40,6 +41,12 @@ const alumnoInicial = {
   monto_mensual_personalizado: '', estado: 'ACTIVO', observaciones: '',
 };
 
+const entrenadorInicial = {
+  username: '', password: '', first_name: '', last_name: '', documento: '',
+  telefono: '', email: '', fecha_nacimiento: '', especialidad: '',
+  fecha_ingreso: hoy(), activo: true, observaciones: '',
+};
+
 const plantillaInicial = {
   nombre: '', tipo: 'RECORDATORIO', activa: true,
   contenido: 'Hola {tutor}, le recordamos que la mensualidad de {alumno}, categoria {categoria}, vence el {vencimiento}. Monto pendiente: Bs {saldo}. Muchas gracias.',
@@ -59,9 +66,11 @@ export default function EscuelaDashboard() {
   const [tutores, setTutores] = useState([]);
   const [categoriaForm, setCategoriaForm] = useState(categoriaInicial);
   const [alumnoForm, setAlumnoForm] = useState(alumnoInicial);
+  const [entrenadorForm, setEntrenadorForm] = useState(entrenadorInicial);
   const [plantillaForm, setPlantillaForm] = useState(plantillaInicial);
   const [editandoCategoria, setEditandoCategoria] = useState(null);
   const [editandoAlumno, setEditandoAlumno] = useState(null);
+  const [editandoEntrenador, setEditandoEntrenador] = useState(null);
   const [editandoPlantilla, setEditandoPlantilla] = useState(null);
   const [periodo, setPeriodo] = useState(mesActual());
   const [categoriaCobro, setCategoriaCobro] = useState('');
@@ -79,16 +88,16 @@ export default function EscuelaDashboard() {
   const cargarDatos = useCallback(async () => {
     const consultas = [
       api.getResumenEscuela(), api.getCategoriasEscuela(), api.getAlumnosEscuela(),
-      api.getMensualidadesEscuela(), api.getPlantillasEscuela(),
+      api.getMensualidadesEscuela(), api.getPlantillasEscuela(), api.entrenadoresEscuela.list(),
     ];
     if (esAdmin) consultas.push(api.getUsuarios());
-    const [resumenData, categoriasData, alumnosData, mensualidadesData, plantillasData, usuariosData = []] = await Promise.all(consultas);
+    const [resumenData, categoriasData, alumnosData, mensualidadesData, plantillasData, entrenadoresData, usuariosData = []] = await Promise.all(consultas);
     setResumen(resumenData);
     setCategorias(categoriasData);
     setAlumnos(alumnosData);
     setMensualidades(mensualidadesData);
     setPlantillas(plantillasData);
-    setEntrenadores(usuariosData.filter((item) => item.rol === 'ENTRENADOR'));
+    setEntrenadores(entrenadoresData);
     setTutores(usuariosData.filter((item) => item.rol === 'TUTOR'));
     setPlantillaSeleccionada((actual) => actual || (plantillasData.length ? String(plantillasData[0].id) : ''));
   }, [esAdmin]);
@@ -155,6 +164,22 @@ export default function EscuelaDashboard() {
     ).then((ok) => { if (ok) { setAlumnoForm(alumnoInicial); setEditandoAlumno(null); } });
   };
 
+  const guardarEntrenador = (event) => {
+    event.preventDefault();
+    const datos = limpiarVacios(entrenadorForm, ['documento', 'fecha_nacimiento']);
+    if (editandoEntrenador && !datos.password) delete datos.password;
+    ejecutar(
+      () => editandoEntrenador ? api.entrenadoresEscuela.update(editandoEntrenador, datos) : api.entrenadoresEscuela.create(datos),
+      editandoEntrenador ? 'Entrenador actualizado.' : 'Entrenador registrado.',
+    ).then((ok) => { if (ok) { setEntrenadorForm(entrenadorInicial); setEditandoEntrenador(null); } });
+  };
+
+  const editarEntrenador = (entrenador) => {
+    setEntrenadorForm({ ...entrenador, password: '', documento: entrenador.documento || '', fecha_nacimiento: entrenador.fecha_nacimiento || '', telefono: entrenador.telefono || '' });
+    setEditandoEntrenador(entrenador.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const editarAlumno = (alumno) => {
     setAlumnoForm({ ...alumno, entrenador: alumno.entrenador || '', tutor_usuario: alumno.tutor_usuario || '', monto_mensual_personalizado: alumno.monto_mensual_personalizado ?? '' });
     setEditandoAlumno(alumno.id);
@@ -216,11 +241,12 @@ export default function EscuelaDashboard() {
         </div>
       </header>
       <div className="dashboard-layout">
-        <aside className="dashboard-sidebar"><nav className="sidebar-nav">{menu.filter((item) => esAdmin || !['categorias', 'beneficios', 'inscripciones', 'finanzas', 'inventario', 'auditoria'].includes(item.id)).map((item) => <button key={item.id} className={`nav-item ${seccion === item.id ? 'active' : ''}`} onClick={() => { setSeccion(item.id); setError(''); setNotice(''); }} type="button"><span className="nav-badge">{item.icon}</span>{item.label}</button>)}</nav></aside>
+        <aside className="dashboard-sidebar"><nav className="sidebar-nav">{menu.filter((item) => esAdmin || !['entrenadores', 'categorias', 'beneficios', 'inscripciones', 'finanzas', 'inventario', 'auditoria'].includes(item.id)).map((item) => <button key={item.id} className={`nav-item ${seccion === item.id ? 'active' : ''}`} onClick={() => { setSeccion(item.id); setError(''); setNotice(''); }} type="button"><span className="nav-badge">{item.icon}</span>{item.label}</button>)}</nav></aside>
         <main className="dashboard-content">
           {error && <div className="error escuela-alert">{error}</div>}
           {notice && <div className="success-message">{notice}</div>}
           {seccion === 'resumen' && <Resumen resumen={resumen} categorias={categorias} deudores={deudores} irA={setSeccion} esAdmin={esAdmin} />}
+          {seccion === 'entrenadores' && esAdmin && <Entrenadores entrenadores={entrenadores} form={entrenadorForm} setForm={setEntrenadorForm} guardar={guardarEntrenador} editar={editarEntrenador} cancelar={() => { setEntrenadorForm(entrenadorInicial); setEditandoEntrenador(null); }} editando={editandoEntrenador} saving={saving} />}
           {seccion === 'categorias' && esAdmin && <Categorias categorias={categorias} entrenadores={entrenadores} form={categoriaForm} setForm={setCategoriaForm} guardar={guardarCategoria} editar={editarCategoria} cancelar={() => { setCategoriaForm(categoriaInicial); setEditandoCategoria(null); }} editando={editandoCategoria} saving={saving} eliminar={(categoria) => confirmarEliminar(`Eliminar la categoria ${categoria.nombre}?`, () => ejecutar(() => api.deleteCategoriaEscuela(categoria.id), 'Categoria eliminada.'))} />}
           {seccion === 'alumnos' && <Alumnos alumnos={alumnosFiltrados} categorias={categorias} entrenadores={entrenadores} form={alumnoForm} setForm={setAlumnoForm} guardar={guardarAlumno} editar={editarAlumno} cancelar={() => { setAlumnoForm(alumnoInicial); setEditandoAlumno(null); }} editando={editandoAlumno} saving={saving} esAdmin={esAdmin} filtro={filtroAlumno} setFiltro={setFiltroAlumno} filtroCategoria={filtroCategoria} setFiltroCategoria={setFiltroCategoria} />}
           {seccion === 'cobranza' && <Cobranza cobros={cobrosFiltrados} categorias={categorias} periodo={periodo} setPeriodo={setPeriodo} categoria={categoriaCobro} setCategoria={setCategoriaCobro} filtro={filtroCobro} setFiltro={setFiltroCobro} generar={generarCobros} pagoActivo={pagoActivo} setPagoActivo={setPagoActivo} pagoForm={pagoForm} setPagoForm={setPagoForm} registrarPago={registrarPago} saving={saving} />}
@@ -271,6 +297,7 @@ function Resumen({ resumen, categorias, deudores, irA, esAdmin }) {
           <strong>Continua con una tarea frecuente</strong>
         </div>
         <button type="button" onClick={() => irA('alumnos')}>Registrar alumno</button>
+        {esAdmin && <button type="button" onClick={() => irA('entrenadores')}>Registrar entrenador</button>}
         {esAdmin && <button type="button" onClick={() => irA('categorias')}>Crear categoria</button>}
         <button type="button" onClick={() => irA('cobranza')}>Gestionar mensualidades</button>
         <button type="button" onClick={() => irA('mensajes')}>Abrir WhatsApp</button>
@@ -327,12 +354,38 @@ function Resumen({ resumen, categorias, deudores, irA, esAdmin }) {
   );
 }
 
+function Entrenadores({ entrenadores, form, setForm, guardar, editar, cancelar, editando, saving }) {
+  return (
+    <section className="data-panel">
+      <div className="panel-header"><div><h3>Entrenadores de la escuela</h3><p>Registra datos reales y crea la cuenta que usara cada entrenador para ingresar al sistema.</p></div></div>
+      <form className="dashboard-form escuela-form" onSubmit={guardar}>
+        <Campo label="Nombres"><input required value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></Campo>
+        <Campo label="Apellidos"><input required value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></Campo>
+        <Campo label="Documento o CI"><input value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value })} /></Campo>
+        <Campo label="Fecha de nacimiento"><input type="date" value={form.fecha_nacimiento} onChange={(e) => setForm({ ...form, fecha_nacimiento: e.target.value })} /></Campo>
+        <Campo label="Telefono"><input required type="tel" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} placeholder="Ej. 71234567" /></Campo>
+        <Campo label="Correo"><input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Campo>
+        <Campo label="Especialidad"><input value={form.especialidad} onChange={(e) => setForm({ ...form, especialidad: e.target.value })} placeholder="Ej. Iniciacion, formativas o competencia" /></Campo>
+        <Campo label="Fecha de ingreso"><input required type="date" value={form.fecha_ingreso} onChange={(e) => setForm({ ...form, fecha_ingreso: e.target.value })} /></Campo>
+        <Campo label="Usuario de acceso"><input required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} autoComplete="off" /></Campo>
+        <Campo label={editando ? 'Nueva contrasena (opcional)' : 'Contrasena inicial'}><input required={!editando} minLength="6" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} autoComplete="new-password" /></Campo>
+        <Campo label="Estado"><select value={form.activo ? 'ACTIVO' : 'INACTIVO'} onChange={(e) => setForm({ ...form, activo: e.target.value === 'ACTIVO' })}><option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option></select></Campo>
+        <textarea value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} placeholder="Formacion, experiencia u observaciones" />
+        <button className="action-btn primary" disabled={saving}>{editando ? 'Guardar cambios' : 'Registrar entrenador'}</button>
+        {editando && <button className="action-btn" type="button" onClick={cancelar}>Cancelar</button>}
+      </form>
+      <div className="trainer-summary"><strong>{entrenadores.filter((item) => item.activo).length}</strong><span>entrenadores activos de {entrenadores.length} registrados</span></div>
+      <Tabla headers={['Entrenador', 'CI', 'Telefono', 'Correo', 'Especialidad', 'Ingreso', 'Usuario', 'Estado', 'Accion']} rows={entrenadores.map((item) => [item.nombre_completo, item.documento || '-', item.telefono || '-', item.email, item.especialidad || '-', fechaBonita(item.fecha_ingreso), item.username, item.activo ? 'Activo' : 'Inactivo', <Acciones key={item.id}><button onClick={() => editar(item)}>Editar</button></Acciones>])} />
+    </section>
+  );
+}
+
 function Categorias({ categorias, entrenadores, form, setForm, guardar, editar, cancelar, editando, saving, eliminar }) {
-  return <section className="data-panel"><div className="panel-header"><div><h3>Categorias de la escuela</h3><p>Crea Sub 8, Sub 10 o cualquier categoria y define su mensualidad.</p></div></div><form className="dashboard-form" onSubmit={guardar}><Campo label="Nombre"><input required value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Ej. Sub 10" /></Campo><Campo label="Edad minima"><input type="number" min="3" max="99" value={form.edad_minima ?? ''} onChange={(e) => setForm({ ...form, edad_minima: e.target.value })} /></Campo><Campo label="Edad maxima"><input type="number" min="3" max="99" value={form.edad_maxima ?? ''} onChange={(e) => setForm({ ...form, edad_maxima: e.target.value })} /></Campo><Campo label="Mensualidad (Bs)"><input required type="number" min="0" step="0.01" value={form.monto_mensual} onChange={(e) => setForm({ ...form, monto_mensual: e.target.value })} /></Campo><Campo label="Dia de vencimiento"><input required type="number" min="1" max="28" value={form.dia_vencimiento} onChange={(e) => setForm({ ...form, dia_vencimiento: e.target.value })} /></Campo><Campo label="Entrenadores"><select multiple value={form.entrenadores || []} onChange={(e) => setForm({ ...form, entrenadores: [...e.target.selectedOptions].map((option) => option.value) })}>{entrenadores.map((item) => <option key={item.id} value={item.id}>{nombreUsuario(item)}</option>)}</select></Campo><textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} placeholder="Descripcion u horarios de referencia" /><button className="action-btn primary" disabled={saving}>{editando ? 'Guardar cambios' : 'Crear categoria'}</button>{editando && <button className="action-btn" type="button" onClick={cancelar}>Cancelar</button>}</form><Tabla headers={['Categoria', 'Edades', 'Mensualidad', 'Vence', 'Entrenadores', 'Estado', 'Acciones']} rows={categorias.map((item) => [item.nombre, rangoEdad(item), moneda(item.monto_mensual), `Dia ${item.dia_vencimiento}`, item.entrenadores_detalle?.map((e) => e.nombre_completo).join(', ') || 'Sin asignar', item.activa ? 'Activa' : 'Inactiva', <Acciones key={item.id}><button onClick={() => editar(item)}>Editar</button><button className="danger-link" onClick={() => eliminar(item)}>Eliminar</button></Acciones>])} /></section>;
+  return <section className="data-panel"><div className="panel-header"><div><h3>Categorias de la escuela</h3><p>Crea Sub 8, Sub 10 o cualquier categoria y define su mensualidad.</p></div></div><form className="dashboard-form" onSubmit={guardar}><Campo label="Nombre"><input required value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Ej. Sub 10" /></Campo><Campo label="Edad minima"><input type="number" min="3" max="99" value={form.edad_minima ?? ''} onChange={(e) => setForm({ ...form, edad_minima: e.target.value })} /></Campo><Campo label="Edad maxima"><input type="number" min="3" max="99" value={form.edad_maxima ?? ''} onChange={(e) => setForm({ ...form, edad_maxima: e.target.value })} /></Campo><Campo label="Mensualidad (Bs)"><input required type="number" min="0" step="0.01" value={form.monto_mensual} onChange={(e) => setForm({ ...form, monto_mensual: e.target.value })} /></Campo><Campo label="Dia de vencimiento"><input required type="number" min="1" max="28" value={form.dia_vencimiento} onChange={(e) => setForm({ ...form, dia_vencimiento: e.target.value })} /></Campo><Campo label="Entrenadores"><select multiple value={form.entrenadores || []} onChange={(e) => setForm({ ...form, entrenadores: [...e.target.selectedOptions].map((option) => option.value) })}>{entrenadores.filter((item) => item.activo).map((item) => <option key={item.id} value={item.usuario}>{item.nombre_completo}</option>)}</select></Campo><textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} placeholder="Descripcion u horarios de referencia" /><button className="action-btn primary" disabled={saving}>{editando ? 'Guardar cambios' : 'Crear categoria'}</button>{editando && <button className="action-btn" type="button" onClick={cancelar}>Cancelar</button>}</form><Tabla headers={['Categoria', 'Edades', 'Mensualidad', 'Vence', 'Entrenadores', 'Estado', 'Acciones']} rows={categorias.map((item) => [item.nombre, rangoEdad(item), moneda(item.monto_mensual), `Dia ${item.dia_vencimiento}`, item.entrenadores_detalle?.map((e) => e.nombre_completo).join(', ') || 'Sin asignar', item.activa ? 'Activa' : 'Inactiva', <Acciones key={item.id}><button onClick={() => editar(item)}>Editar</button><button className="danger-link" onClick={() => eliminar(item)}>Eliminar</button></Acciones>])} /></section>;
 }
 
 function Alumnos({ alumnos, categorias, entrenadores, form, setForm, guardar, editar, cancelar, editando, saving, esAdmin, filtro, setFiltro, filtroCategoria, setFiltroCategoria }) {
-  return <section className="data-panel"><div className="panel-header"><div><h3>Alumnos</h3><p>Ficha del alumno, responsable de pago y categoria.</p></div></div><form className="dashboard-form escuela-form" onSubmit={guardar}><Campo label="Nombres"><input required value={form.nombres} onChange={(e) => setForm({ ...form, nombres: e.target.value })} /></Campo><Campo label="Apellidos"><input required value={form.apellidos} onChange={(e) => setForm({ ...form, apellidos: e.target.value })} /></Campo><Campo label="Documento"><input required value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value })} /></Campo><Campo label="Fecha de nacimiento"><input type="date" value={form.fecha_nacimiento || ''} onChange={(e) => setForm({ ...form, fecha_nacimiento: e.target.value })} /></Campo><Campo label="Categoria"><select required value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })}><option value="">Seleccionar</option>{categorias.filter((c) => c.activa).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select></Campo>{esAdmin && <Campo label="Entrenador"><select value={form.entrenador || ''} onChange={(e) => setForm({ ...form, entrenador: e.target.value })}><option value="">Sin asignar</option>{entrenadores.map((e) => <option key={e.id} value={e.id}>{nombreUsuario(e)}</option>)}</select></Campo>}<Campo label="Fecha de inscripcion"><input required type="date" value={form.fecha_inscripcion} onChange={(e) => setForm({ ...form, fecha_inscripcion: e.target.value })} /></Campo><Campo label="Telefono del alumno"><input value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} /></Campo><Campo label="Tutor o responsable"><input required value={form.tutor_nombre} onChange={(e) => setForm({ ...form, tutor_nombre: e.target.value })} /></Campo><Campo label="Parentesco"><input value={form.tutor_parentesco} onChange={(e) => setForm({ ...form, tutor_parentesco: e.target.value })} /></Campo><Campo label="WhatsApp del tutor"><input required value={form.tutor_telefono} onChange={(e) => setForm({ ...form, tutor_telefono: e.target.value })} placeholder="Ej. 71234567" /></Campo><Campo label="Telefono alternativo"><input value={form.tutor_telefono_alternativo} onChange={(e) => setForm({ ...form, tutor_telefono_alternativo: e.target.value })} /></Campo><Campo label="Correo del tutor"><input type="email" value={form.tutor_email} onChange={(e) => setForm({ ...form, tutor_email: e.target.value })} /></Campo><Campo label="Mensualidad especial"><input type="number" min="0" step="0.01" value={form.monto_mensual_personalizado ?? ''} onChange={(e) => setForm({ ...form, monto_mensual_personalizado: e.target.value })} placeholder="Usa la de la categoria" /></Campo><Campo label="Estado"><select value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value })}><option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option><option value="RETIRADO">Retirado</option></select></Campo><input value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} placeholder="Direccion" /><textarea value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} placeholder="Alergias, informacion medica u observaciones" /><button className="action-btn primary" disabled={saving}>{editando ? 'Guardar cambios' : 'Registrar alumno'}</button>{editando && <button className="action-btn" type="button" onClick={cancelar}>Cancelar</button>}</form><div className="filters-row"><input value={filtro} onChange={(e) => setFiltro(e.target.value)} placeholder="Buscar alumno o documento" /><select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}><option value="">Todas las categorias</option>{categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select></div><Tabla headers={['Alumno', 'Documento', 'Categoria', 'Tutor', 'WhatsApp', 'Mensualidad', 'Estado', 'Acciones']} rows={alumnos.map((item) => [`${item.nombres} ${item.apellidos}`, item.documento, item.categoria_nombre, item.tutor_nombre, item.tutor_telefono, moneda(item.monto_mensual), item.estado, <Acciones key={item.id}><button onClick={() => editar(item)}>Editar</button></Acciones>])} /></section>;
+  return <section className="data-panel"><div className="panel-header"><div><h3>Alumnos</h3><p>Ficha del alumno, responsable de pago y categoria.</p></div></div><form className="dashboard-form escuela-form" onSubmit={guardar}><Campo label="Nombres"><input required value={form.nombres} onChange={(e) => setForm({ ...form, nombres: e.target.value })} /></Campo><Campo label="Apellidos"><input required value={form.apellidos} onChange={(e) => setForm({ ...form, apellidos: e.target.value })} /></Campo><Campo label="Documento"><input required value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value })} /></Campo><Campo label="Fecha de nacimiento"><input type="date" value={form.fecha_nacimiento || ''} onChange={(e) => setForm({ ...form, fecha_nacimiento: e.target.value })} /></Campo><Campo label="Categoria"><select required value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })}><option value="">Seleccionar</option>{categorias.filter((c) => c.activa).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select></Campo>{esAdmin && <Campo label="Entrenador"><select value={form.entrenador || ''} onChange={(e) => setForm({ ...form, entrenador: e.target.value })}><option value="">Sin asignar</option>{entrenadores.filter((e) => e.activo).map((e) => <option key={e.id} value={e.usuario}>{e.nombre_completo}</option>)}</select></Campo>}<Campo label="Fecha de inscripcion"><input required type="date" value={form.fecha_inscripcion} onChange={(e) => setForm({ ...form, fecha_inscripcion: e.target.value })} /></Campo><Campo label="Telefono del alumno"><input value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} /></Campo><Campo label="Tutor o responsable"><input required value={form.tutor_nombre} onChange={(e) => setForm({ ...form, tutor_nombre: e.target.value })} /></Campo><Campo label="Parentesco"><input value={form.tutor_parentesco} onChange={(e) => setForm({ ...form, tutor_parentesco: e.target.value })} /></Campo><Campo label="WhatsApp del tutor"><input required value={form.tutor_telefono} onChange={(e) => setForm({ ...form, tutor_telefono: e.target.value })} placeholder="Ej. 71234567" /></Campo><Campo label="Telefono alternativo"><input value={form.tutor_telefono_alternativo} onChange={(e) => setForm({ ...form, tutor_telefono_alternativo: e.target.value })} /></Campo><Campo label="Correo del tutor"><input type="email" value={form.tutor_email} onChange={(e) => setForm({ ...form, tutor_email: e.target.value })} /></Campo><Campo label="Mensualidad especial"><input type="number" min="0" step="0.01" value={form.monto_mensual_personalizado ?? ''} onChange={(e) => setForm({ ...form, monto_mensual_personalizado: e.target.value })} placeholder="Usa la de la categoria" /></Campo><Campo label="Estado"><select value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value })}><option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option><option value="RETIRADO">Retirado</option></select></Campo><input value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} placeholder="Direccion" /><textarea value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} placeholder="Alergias, informacion medica u observaciones" /><button className="action-btn primary" disabled={saving}>{editando ? 'Guardar cambios' : 'Registrar alumno'}</button>{editando && <button className="action-btn" type="button" onClick={cancelar}>Cancelar</button>}</form><div className="filters-row"><input value={filtro} onChange={(e) => setFiltro(e.target.value)} placeholder="Buscar alumno o documento" /><select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}><option value="">Todas las categorias</option>{categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select></div><Tabla headers={['Alumno', 'Documento', 'Categoria', 'Tutor', 'WhatsApp', 'Mensualidad', 'Estado', 'Acciones']} rows={alumnos.map((item) => [`${item.nombres} ${item.apellidos}`, item.documento, item.categoria_nombre, item.tutor_nombre, item.tutor_telefono, moneda(item.monto_mensual), item.estado, <Acciones key={item.id}><button onClick={() => editar(item)}>Editar</button></Acciones>])} /></section>;
 }
 
 function Cobranza({ cobros, categorias, periodo, setPeriodo, categoria, setCategoria, filtro, setFiltro, generar, pagoActivo, setPagoActivo, pagoForm, setPagoForm, registrarPago, saving }) {
@@ -372,7 +425,6 @@ function moneda(valor) { return `Bs ${Number(valor || 0).toFixed(2)}`; }
 function fechaBonita(valor) { return valor ? new Intl.DateTimeFormat('es-BO').format(new Date(`${valor}T12:00:00`)) : '-'; }
 function periodoBonito(valor) { return valor ? new Intl.DateTimeFormat('es-BO', { month: 'long', year: 'numeric' }).format(new Date(`${valor.slice(0, 7)}-01T12:00:00`)) : '-'; }
 function rangoEdad(item) { return item.edad_minima != null && item.edad_maxima != null ? `${item.edad_minima} a ${item.edad_maxima} anos` : 'Sin limite'; }
-function nombreUsuario(item) { return `${item.first_name || ''} ${item.last_name || ''}`.trim() || item.username; }
 function limpiarVacios(datos, camposNulos) { const copia = { ...datos }; camposNulos.forEach((campo) => { if (copia[campo] === '') copia[campo] = null; }); return copia; }
 function confirmarEliminar(mensaje, accion) { if (window.confirm(mensaje)) accion(); }
 function extraerError(error) { try { const data = JSON.parse(error.message); const primero = Object.values(data)[0]; return Array.isArray(primero) ? primero[0] : String(primero || 'No se pudo guardar.'); } catch { return 'No se pudo completar la operacion. Revisa los datos.'; } }

@@ -15,6 +15,11 @@ ALCANCE IMPLEMENTADO
     - Responsable principal y contacto alternativo.
     - Cuenta de tutor vinculada para ingresar al portal familiar.
 
+[X] Entrenadores de la escuela
+    - Ficha con nombres y apellidos reales, CI, telefono y correo.
+    - Especialidad, fecha de ingreso, estado y observaciones.
+    - Cuenta de acceso vinculada y asignacion a categorias, grupos y alumnos.
+
 [X] Grupos y horarios
     - Varios grupos por categoria.
     - Dias, horas, cancha, entrenador y capacidad maxima.
@@ -72,6 +77,7 @@ ALCANCE IMPLEMENTADO
     - Ingresos diarios y mensuales.
     - Morosidad, deuda por familia, edades y estados de alumnos.
     - Exportacion PDF, Excel y CSV.
+    - Tabla de posiciones de torneos en PDF para administrador y entrenador.
 
 [X] Seguridad y auditoria
     - Roles Administrador, Entrenador y Tutor.

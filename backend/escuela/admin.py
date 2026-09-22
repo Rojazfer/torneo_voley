@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (
-    Alumno, CambioHorarioGrupo, CategoriaEscuela, DescuentoAlumno, DocumentoAlumno, EntregaUniforme, EvaluacionDeportiva,
+    Alumno, CambioHorarioGrupo, CategoriaEscuela, DescuentoAlumno, DocumentoAlumno, EntregaUniforme, EntrenadorEscuela, EvaluacionDeportiva,
     FichaMedica, GastoEscuela, GrupoEntrenamiento, ListaEspera, Mensualidad,
     MovimientoInventario, Pago, PlantillaMensaje, PrestamoMaterial,
     ProductoInventario, RegistroAuditoria, RegistroMensaje, SolicitudInscripcion,
@@ -9,6 +9,7 @@ from .models import (
 
 
 admin.site.register(CategoriaEscuela)
+admin.site.register(EntrenadorEscuela)
 admin.site.register(Alumno)
 admin.site.register(Mensualidad)
 admin.site.register(Pago)

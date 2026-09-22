@@ -13,14 +13,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import (
-    Alumno, CambioHorarioGrupo, CategoriaEscuela, DescuentoAlumno, DocumentoAlumno, EntregaUniforme, EvaluacionDeportiva,
-    FichaMedica, GastoEscuela, GrupoEntrenamiento, ListaEspera, Mensualidad,
+    Alumno, CambioHorarioGrupo, CategoriaEscuela, DescuentoAlumno, DocumentoAlumno, EntregaUniforme, EntrenadorEscuela,
+    EvaluacionDeportiva, FichaMedica, GastoEscuela, GrupoEntrenamiento, ListaEspera, Mensualidad,
     MovimientoInventario, Pago, PlantillaMensaje, PrestamoMaterial,
     ProductoInventario, RegistroAuditoria, RegistroMensaje, SolicitudInscripcion,
 )
 from .serializers import (
     AlumnoSerializer, CambioHorarioGrupoSerializer, CategoriaEscuelaSerializer, DescuentoAlumnoSerializer, DocumentoAlumnoSerializer,
-    EntregaUniformeSerializer, EvaluacionDeportivaSerializer, FichaMedicaSerializer,
+    EntregaUniformeSerializer, EntrenadorEscuelaSerializer, EvaluacionDeportivaSerializer, FichaMedicaSerializer,
     GastoEscuelaSerializer,
     GenerarMensualidadesSerializer, GrupoEntrenamientoSerializer, MensualidadSerializer,
     ListaEsperaSerializer, MovimientoInventarioSerializer, PagoSerializer,
@@ -82,6 +82,28 @@ class CategoriaListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return categorias_visibles(self.request.user)
+
+
+class EntrenadorEscuelaListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = EntrenadorEscuelaSerializer
+    permission_classes = [SoloAdminOConsulta]
+
+    def get_queryset(self):
+        return EntrenadorEscuela.objects.select_related('usuario')
+
+    def perform_create(self, serializer):
+        entrenador = serializer.save()
+        registrar_auditoria(self.request, 'CREAR', entrenador, f'Entrenador registrado: {entrenador.nombre_completo}')
+
+
+class EntrenadorEscuelaDetailAPIView(generics.RetrieveUpdateAPIView):
+    queryset = EntrenadorEscuela.objects.select_related('usuario')
+    serializer_class = EntrenadorEscuelaSerializer
+    permission_classes = [SoloAdmin]
+
+    def perform_update(self, serializer):
+        entrenador = serializer.save()
+        registrar_auditoria(self.request, 'ACTUALIZAR', entrenador, f'Entrenador actualizado: {entrenador.nombre_completo}')
 
 
 class CategoriaDetailAPIView(generics.RetrieveUpdateDestroyAPIView):

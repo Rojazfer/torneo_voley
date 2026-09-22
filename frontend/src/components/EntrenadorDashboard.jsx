@@ -6,6 +6,7 @@ import { DashboardConfirmModal } from './DashboardModal';
 import FixtureMatch from './FixtureMatch';
 import PositionTeamCell from './PositionTeamCell';
 import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
+import { downloadStandingsPdf } from '../utils/positionsPdf';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
 
@@ -595,6 +596,11 @@ export default function EntrenadorDashboard() {
 
             {activeMenu === 'posiciones' && (
               <Panel title="Tabla de posiciones" subtitle="Tabla calculada desde partidos finalizados.">
+                <div className="panel-actions">
+                  <button className="action-btn primary" type="button" disabled={!posicionesTorneo.length} onClick={() => downloadStandingsPdf({ groups: [{ title: torneoActual?.nombre || 'Tabla de posiciones', category: torneoActual?.categoria || 'Categoria general', rows: posicionesTorneo }], fileName: `posiciones-${torneoActual?.nombre || 'torneo'}` })}>
+                    Descargar posiciones PDF
+                  </button>
+                </div>
                 <DataTable
                   headers={['Pos', 'Equipo', 'PJ', 'PG', 'PP', 'SF', 'SC', 'PF', 'PC', 'DIF', 'PTS']}
                   rows={posicionesTorneo.map((row) => [

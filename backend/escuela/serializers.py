@@ -1,14 +1,77 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
 
 from .models import (
     Alumno, CambioHorarioGrupo, CategoriaEscuela, DescuentoAlumno, DocumentoAlumno, EntregaUniforme, EvaluacionDeportiva,
-    FichaMedica, GastoEscuela, GrupoEntrenamiento, ListaEspera, Mensualidad,
+    EntrenadorEscuela, FichaMedica, GastoEscuela, GrupoEntrenamiento, ListaEspera, Mensualidad,
     MovimientoInventario, Pago, PlantillaMensaje, PrestamoMaterial,
     ProductoInventario, RegistroAuditoria, RegistroMensaje, SolicitudInscripcion,
 )
 
 User = get_user_model()
+
+
+class EntrenadorEscuelaSerializer(serializers.ModelSerializer):
+    usuario = serializers.IntegerField(source='usuario_id', read_only=True)
+    username = serializers.CharField(source='usuario.username')
+    first_name = serializers.CharField(source='usuario.first_name')
+    last_name = serializers.CharField(source='usuario.last_name')
+    email = serializers.EmailField(source='usuario.email')
+    telefono = serializers.CharField(source='usuario.telefono', required=False, allow_blank=True, allow_null=True)
+    password = serializers.CharField(write_only=True, required=False, allow_blank=False, min_length=6)
+    nombre_completo = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = EntrenadorEscuela
+        fields = [
+            'id', 'usuario', 'username', 'password', 'first_name', 'last_name',
+            'nombre_completo', 'documento', 'telefono', 'email', 'fecha_nacimiento',
+            'especialidad', 'fecha_ingreso', 'activo', 'observaciones',
+            'fecha_creacion', 'fecha_actualizacion',
+        ]
+        read_only_fields = ['fecha_creacion', 'fecha_actualizacion']
+
+    def validate(self, attrs):
+        datos_usuario = attrs.get('usuario', {})
+        usuario_actual = self.instance.usuario if self.instance else None
+        username = datos_usuario.get('username', getattr(usuario_actual, 'username', ''))
+        email = datos_usuario.get('email', getattr(usuario_actual, 'email', ''))
+        usuarios = User.objects.all()
+        if usuario_actual:
+            usuarios = usuarios.exclude(pk=usuario_actual.pk)
+        if usuarios.filter(username__iexact=username).exists():
+            raise serializers.ValidationError({'username': 'Este nombre de usuario ya existe.'})
+        if usuarios.filter(email__iexact=email).exists():
+            raise serializers.ValidationError({'email': 'Este correo ya esta registrado.'})
+        if not self.instance and not attrs.get('password'):
+            raise serializers.ValidationError({'password': 'La contrasena inicial es obligatoria.'})
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        datos_usuario = validated_data.pop('usuario')
+        password = validated_data.pop('password')
+        usuario = User.objects.create_user(password=password, rol='ENTRENADOR', **datos_usuario)
+        usuario.is_active = validated_data.get('activo', True)
+        usuario.save(update_fields=['is_active'])
+        return EntrenadorEscuela.objects.create(usuario=usuario, **validated_data)
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        datos_usuario = validated_data.pop('usuario', {})
+        password = validated_data.pop('password', None)
+        for campo, valor in datos_usuario.items():
+            setattr(instance.usuario, campo, valor)
+        for campo, valor in validated_data.items():
+            setattr(instance, campo, valor)
+        if password:
+            instance.usuario.set_password(password)
+        instance.usuario.rol = 'ENTRENADOR'
+        instance.usuario.is_active = instance.activo
+        instance.usuario.save()
+        instance.save()
+        return instance
 
 
 class EntrenadorResumenSerializer(serializers.ModelSerializer):

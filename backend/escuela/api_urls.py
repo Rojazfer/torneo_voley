@@ -8,6 +8,8 @@ urlpatterns = [
     path('escuela/publico/solicitudes/', api_views.SolicitudInscripcionListCreateAPIView.as_view()),
     path('escuela/portal-tutor/', api_views.PortalTutorAPIView.as_view()),
     path('escuela/resumen/', api_views.ResumenEscuelaAPIView.as_view()),
+    path('escuela/entrenadores/', api_views.EntrenadorEscuelaListCreateAPIView.as_view()),
+    path('escuela/entrenadores/<int:pk>/', api_views.EntrenadorEscuelaDetailAPIView.as_view()),
     path('escuela/categorias/', api_views.CategoriaListCreateAPIView.as_view()),
     path('escuela/categorias/<int:pk>/', api_views.CategoriaDetailAPIView.as_view()),
     path('escuela/alumnos/', api_views.AlumnoListCreateAPIView.as_view()),

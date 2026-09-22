@@ -8,6 +8,7 @@ import { DashboardConfirmModal } from './DashboardModal';
 import FixtureMatch from './FixtureMatch';
 import PositionTeamCell from './PositionTeamCell';
 import { compressPlayerPhoto, compressTeamLogo } from '../utils/imageCompression';
+import { downloadStandingsPdf } from '../utils/positionsPdf';
 import clubLogo from '../assets/club-logo.png';
 import '../styles/Dashboard.css';
 
@@ -1409,6 +1410,11 @@ export default function AdminDashboard() {
 
             {activeMenu === 'posiciones' && (
               <Panel title="Posiciones" subtitle="Tablas separadas por categoria y calculadas desde partidos finalizados.">
+                <div className="panel-actions">
+                  <button className="action-btn primary" type="button" disabled={!posicionesPorCategoria.length} onClick={() => downloadStandingsPdf({ groups: posicionesPorCategoria, fileName: 'tabla-posiciones-ayacucho' })}>
+                    Descargar posiciones PDF
+                  </button>
+                </div>
                 {posicionesPorCategoria.length ? (
                   <div className="position-groups">
                     {posicionesPorCategoria.map((group) => (

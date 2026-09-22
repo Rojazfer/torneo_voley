@@ -6,6 +6,33 @@ from django.db import models
 from django.utils import timezone
 
 
+class EntrenadorEscuela(models.Model):
+    usuario = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='perfil_entrenador_escuela',
+        limit_choices_to={'rol': 'ENTRENADOR'},
+    )
+    documento = models.CharField(max_length=30, unique=True, null=True, blank=True)
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    especialidad = models.CharField(max_length=120, blank=True)
+    fecha_ingreso = models.DateField(default=timezone.localdate)
+    activo = models.BooleanField(default=True)
+    observaciones = models.TextField(blank=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['usuario__last_name', 'usuario__first_name', 'usuario__username']
+
+    @property
+    def nombre_completo(self):
+        return self.usuario.get_full_name() or self.usuario.username
+
+    def __str__(self):
+        return self.nombre_completo
+
+
 class CategoriaEscuela(models.Model):
     nombre = models.CharField(max_length=80, unique=True)
     edad_minima = models.PositiveSmallIntegerField(null=True, blank=True)

@@ -273,6 +273,7 @@ const escuelaCrud = (ruta) => ({
 });
 
 export const gruposEscuela = escuelaCrud('grupos');
+export const entrenadoresEscuela = escuelaCrud('entrenadores');
 export const cambiosHorarioEscuela = escuelaCrud('cambios-horario');
 export const descuentosEscuela = escuelaCrud('descuentos');
 export const evaluacionesEscuela = escuelaCrud('evaluaciones');
@@ -361,6 +362,7 @@ export default {
   deletePlantillaEscuela,
   registrarMensajeEscuela,
   gruposEscuela,
+  entrenadoresEscuela,
   cambiosHorarioEscuela,
   descuentosEscuela,
   evaluacionesEscuela,
