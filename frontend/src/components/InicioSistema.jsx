@@ -9,6 +9,8 @@ export default function InicioSistema() {
   const { user, logout } = useAuth();
   const esAdmin = user?.rol === 'ADMIN';
   const rutaTorneos = user?.rol === 'ADMIN' ? '/admin/dashboard' : '/entrenador/dashboard';
+  const nombreUsuario = user?.first_name || user?.username || 'Usuario';
+  const fechaActual = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
 
   const salir = () => {
     logout();
@@ -27,8 +29,9 @@ export default function InicioSistema() {
             </div>
           </div>
           <div className="system-user">
+            <span className="system-user-avatar" aria-hidden="true">{nombreUsuario.charAt(0).toUpperCase()}</span>
             <div>
-              <strong>{user?.first_name || user?.username}</strong>
+              <strong>{nombreUsuario}</strong>
               <span>{user?.rol === 'ADMIN' ? 'Administrador' : 'Entrenador'}</span>
             </div>
             <button type="button" onClick={salir}>Cerrar sesion</button>
@@ -38,9 +41,15 @@ export default function InicioSistema() {
 
       <main className="system-home-content">
         <section className="system-heading">
-          <p className="system-eyebrow">MODULOS DEL SISTEMA</p>
-          <h2>Selecciona el area de trabajo</h2>
-          <p>Cada modulo conserva sus propios registros, procesos y reportes.</p>
+          <div>
+            <p className="system-eyebrow">CENTRO DE OPERACIONES</p>
+            <h2>Selecciona el area de trabajo</h2>
+            <p>Gestion central del club, con procesos y reportes independientes.</p>
+          </div>
+          <div className="system-heading-meta">
+            <span>{fechaActual}</span>
+            <strong>{esAdmin ? '2 modulos habilitados' : '1 modulo habilitado'}</strong>
+          </div>
         </section>
 
         <section className="module-grid" aria-label="Modulos disponibles">
@@ -83,6 +92,7 @@ export default function InicioSistema() {
 
         {esAdmin && (
           <section className="system-shortcuts">
+            <span className="shortcut-code" aria-hidden="true">ON</span>
             <div>
               <span>Inscripcion publica</span>
               <strong>Formulario para nuevos alumnos</strong>

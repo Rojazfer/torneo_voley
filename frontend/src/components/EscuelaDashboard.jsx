@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { jsPDF } from 'jspdf';
 import api from '../services/api';
 import EscuelaOperaciones from './EscuelaOperaciones';
 import EscuelaGestionAvanzada from './EscuelaGestionAvanzada';
 import clubLogo from '../assets/club-logo.png';
 import { GERENTE_CELULAR, GERENTE_WHATSAPP } from '../config/escuela';
+import { crearEstadoCuentaPdf, crearFacturaInternaPdf, crearReciboPdf, FORMATOS_COMPROBANTE } from '../utils/schoolDocumentsPdf';
 import '../styles/Dashboard.css';
 import '../styles/Escuela.css';
 
@@ -389,11 +389,12 @@ function Alumnos({ alumnos, categorias, entrenadores, form, setForm, guardar, ed
 }
 
 function Cobranza({ cobros, categorias, periodo, setPeriodo, categoria, setCategoria, filtro, setFiltro, generar, pagoActivo, setPagoActivo, pagoForm, setPagoForm, registrarPago, saving }) {
+  const [formatoComprobante, setFormatoComprobante] = useState('MEDIA_CARTA');
   const descargarEstadoCuenta = async (mensualidad) => {
     const todas = await api.getMensualidadesEscuela();
-    descargarEstadoCuentaCompleta(mensualidad, todas.filter((item) => item.alumno === mensualidad.alumno));
+    await descargarEstadoCuentaCompleta(mensualidad, todas.filter((item) => item.alumno === mensualidad.alumno), formatoComprobante);
   };
-  return <section className="data-panel"><div className="panel-header"><div><h3>Mensualidades y pagos</h3><p>Genera cargos con becas o descuentos, registra abonos y emite recibos.</p></div></div><div className="collection-toolbar"><Campo label="Periodo"><input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} /></Campo><Campo label="Categoria"><select value={categoria} onChange={(e) => setCategoria(e.target.value)}><option value="">Todas</option>{categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select></Campo><Campo label="Estado"><select value={filtro} onChange={(e) => setFiltro(e.target.value)}><option value="TODOS">Todos</option><option value="PENDIENTE">Pendientes</option><option value="PARCIAL">Pago parcial</option><option value="PAGADA">Pagadas</option><option value="VENCIDA">Vencidas</option></select></Campo><button className="action-btn primary" type="button" disabled={saving} onClick={generar}>Generar mensualidades</button></div>{pagoActivo && <form className="payment-form" onSubmit={registrarPago}><div><strong>Registrar pago</strong><span>{pagoActivo.alumno_nombre} · saldo {moneda(pagoActivo.saldo)}</span></div><input required type="number" min="0.01" max={pagoActivo.saldo} step="0.01" value={pagoForm.monto} onChange={(e) => setPagoForm({ ...pagoForm, monto: e.target.value })} placeholder="Monto" /><input required type="date" value={pagoForm.fecha_pago} onChange={(e) => setPagoForm({ ...pagoForm, fecha_pago: e.target.value })} /><select value={pagoForm.metodo} onChange={(e) => setPagoForm({ ...pagoForm, metodo: e.target.value })}><option value="EFECTIVO">Efectivo</option><option value="TRANSFERENCIA">Transferencia</option><option value="QR">QR</option><option value="OTRO">Otro</option></select><input value={pagoForm.numero_comprobante} onChange={(e) => setPagoForm({ ...pagoForm, numero_comprobante: e.target.value })} placeholder="Nro. comprobante" /><button className="action-btn primary" disabled={saving}>Confirmar pago</button><button className="action-btn" type="button" onClick={() => setPagoActivo(null)}>Cancelar</button></form>}<Tabla headers={['Alumno', 'Categoria', 'Base', 'Descuento', 'Cargo', 'Pagado', 'Saldo', 'Estado', 'Acciones']} rows={cobros.map((item) => [item.alumno_nombre, item.categoria_nombre, moneda(item.monto_base || item.monto), moneda(item.descuento_aplicado), moneda(item.monto), moneda(item.total_pagado), moneda(item.saldo), <EstadoCobro key={`e-${item.id}`} item={item} />, <Acciones key={item.id}>{item.estado !== 'PAGADA' && item.estado !== 'ANULADA' && <button onClick={() => { setPagoActivo(item); setPagoForm((actual) => ({ ...actual, monto: item.saldo })); }}>Registrar pago</button>}{item.pagos?.length > 0 && <button onClick={() => descargarRecibo(item.pagos[0], item)}>Recibo</button>}<button onClick={() => descargarEstadoCuenta(item)}>Estado</button></Acciones>])} /></section>;
+  return <section className="data-panel"><div className="panel-header"><div><h3>Mensualidades y pagos</h3><p>Genera cargos con becas o descuentos, registra abonos y emite comprobantes.</p></div></div><div className="collection-toolbar"><Campo label="Periodo"><input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} /></Campo><Campo label="Categoria"><select value={categoria} onChange={(e) => setCategoria(e.target.value)}><option value="">Todas</option>{categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}</select></Campo><Campo label="Estado"><select value={filtro} onChange={(e) => setFiltro(e.target.value)}><option value="TODOS">Todos</option><option value="PENDIENTE">Pendientes</option><option value="PARCIAL">Pago parcial</option><option value="PAGADA">Pagadas</option><option value="VENCIDA">Vencidas</option></select></Campo><Campo label="Formato de comprobante"><select value={formatoComprobante} onChange={(e) => setFormatoComprobante(e.target.value)}>{FORMATOS_COMPROBANTE.map((formato) => <option key={formato.value} value={formato.value}>{formato.label}</option>)}</select></Campo><button className="action-btn primary" type="button" disabled={saving} onClick={generar}>Generar mensualidades</button></div>{pagoActivo && <form className="payment-form" onSubmit={registrarPago}><div><strong>Registrar pago</strong><span>{pagoActivo.alumno_nombre} · saldo {moneda(pagoActivo.saldo)}</span></div><input required type="number" min="0.01" max={pagoActivo.saldo} step="0.01" value={pagoForm.monto} onChange={(e) => setPagoForm({ ...pagoForm, monto: e.target.value })} placeholder="Monto" /><input required type="date" value={pagoForm.fecha_pago} onChange={(e) => setPagoForm({ ...pagoForm, fecha_pago: e.target.value })} /><select value={pagoForm.metodo} onChange={(e) => setPagoForm({ ...pagoForm, metodo: e.target.value })}><option value="EFECTIVO">Efectivo</option><option value="TRANSFERENCIA">Transferencia</option><option value="QR">QR</option><option value="OTRO">Otro</option></select><input value={pagoForm.numero_comprobante} onChange={(e) => setPagoForm({ ...pagoForm, numero_comprobante: e.target.value })} placeholder="Nro. comprobante" /><button className="action-btn primary" disabled={saving}>Confirmar pago</button><button className="action-btn" type="button" onClick={() => setPagoActivo(null)}>Cancelar</button></form>}<Tabla headers={['Alumno', 'Categoria', 'Base', 'Descuento', 'Cargo', 'Pagado', 'Saldo', 'Estado', 'Acciones']} rows={cobros.map((item) => [item.alumno_nombre, item.categoria_nombre, moneda(item.monto_base || item.monto), moneda(item.descuento_aplicado), moneda(item.monto), moneda(item.total_pagado), moneda(item.saldo), <EstadoCobro key={`e-${item.id}`} item={item} />, <Acciones key={item.id}>{item.estado !== 'PAGADA' && item.estado !== 'ANULADA' && <button onClick={() => { setPagoActivo(item); setPagoForm((actual) => ({ ...actual, monto: item.saldo })); }}>Registrar pago</button>}<button onClick={() => descargarFacturaInterna(item, formatoComprobante)}>Factura</button>{item.pagos?.length > 0 && <button onClick={() => descargarRecibo(item.pagos[0], item, formatoComprobante)}>Recibo</button>}<button onClick={() => descargarEstadoCuenta(item)}>Estado</button></Acciones>])} /></section>;
 }
 
 function Mensajes({ deudores, plantillas, seleccionada, setSeleccionada, enviar, esAdmin, form, setForm, guardar, editando, editar, cancelar, saving, categorias, alumnos }) {
@@ -435,12 +436,8 @@ function completarMensaje(texto, mensualidad, alumno) {
 }
 function proximoCumpleanos(fechaNacimiento, referencia) { if (!fechaNacimiento) return null; const partes = fechaNacimiento.split('-').map(Number); let fecha = new Date(referencia.getFullYear(), partes[1] - 1, partes[2], 12); if (fecha < referencia) fecha = new Date(referencia.getFullYear() + 1, partes[1] - 1, partes[2], 12); return fecha; }
 
-async function descargarRecibo(pago, mensualidad) {
-  const doc = new jsPDF();
-  try { doc.addImage(await cargarImagenDataUrl(clubLogo), 'PNG', 168, 10, 22, 22); } catch { /* El recibo sigue disponible sin imagen. */ }
-  doc.setFontSize(18); doc.text('ESCUELA DE VOLEIBOL', 20, 22);
-  doc.setFontSize(13); doc.text(`RECIBO ${pago.numero_recibo || pago.id}`, 20, 34);
-  doc.setFontSize(11); doc.text(`Alumno: ${mensualidad.alumno_nombre}`, 20, 50); doc.text(`Categoria: ${mensualidad.categoria_nombre}`, 20, 58); doc.text(`Periodo: ${periodoBonito(mensualidad.periodo)}`, 20, 66); doc.text(`Fecha de pago: ${fechaBonita(pago.fecha_pago)}`, 20, 74); doc.text(`Metodo: ${pago.metodo}`, 20, 82); doc.setFontSize(16); doc.text(`IMPORTE: ${moneda(pago.monto)}`, 20, 98); doc.setFontSize(9); doc.text(`Contacto del gerente: ${GERENTE_CELULAR}`, 20, 112); doc.text('Comprobante generado por el sistema de la Escuela de Voleibol.', 20, 120);
+async function descargarRecibo(pago, mensualidad, formato) {
+  const doc = await crearReciboPdf(pago, mensualidad, formato);
   const nombre = `recibo-${pago.numero_recibo || pago.id}.pdf`;
   const archivo = new File([doc.output('blob')], nombre, { type: 'application/pdf' });
   if (navigator.canShare?.({ files: [archivo] }) && window.confirm('Deseas compartir este recibo por WhatsApp u otra aplicacion?')) {
@@ -450,17 +447,12 @@ async function descargarRecibo(pago, mensualidad) {
   }
 }
 
-function descargarEstadoCuentaCompleta(mensualidad, cuenta) {
-  const doc = new jsPDF();
-  const totalCargos = cuenta.reduce((total, item) => total + Number(item.monto), 0);
-  const totalPagado = cuenta.reduce((total, item) => total + Number(item.total_pagado), 0);
-  const saldo = cuenta.reduce((total, item) => total + Number(item.saldo), 0);
-  doc.setFontSize(18); doc.text('ESTADO DE CUENTA', 20, 22);
-  doc.setFontSize(11); doc.text(`Alumno: ${mensualidad.alumno_nombre}`, 20, 38); doc.text(`Categoria: ${mensualidad.categoria_nombre}`, 20, 46); doc.text(`Contacto del gerente: ${GERENTE_CELULAR}`, 120, 46);
-  doc.text(`Total cargos: ${moneda(totalCargos)}`, 20, 58); doc.text(`Total pagado: ${moneda(totalPagado)}`, 20, 66); doc.setFontSize(15); doc.text(`SALDO TOTAL: ${moneda(saldo)}`, 20, 78);
-  let y = 94; doc.setFontSize(9); doc.text('Periodo', 20, y); doc.text('Cargo', 70, y); doc.text('Pagado', 105, y); doc.text('Saldo', 145, y); doc.text('Estado', 175, y); y += 7;
-  cuenta.sort((a, b) => a.periodo.localeCompare(b.periodo)).forEach((item) => { if (y > 280) { doc.addPage(); y = 20; } doc.text(periodoBonito(item.periodo), 20, y); doc.text(moneda(item.monto), 70, y); doc.text(moneda(item.total_pagado), 105, y); doc.text(moneda(item.saldo), 145, y); doc.text(item.estado, 175, y); y += 7; });
-  doc.save(`estado-${mensualidad.alumno_nombre.replaceAll(' ', '-')}.pdf`);
+async function descargarFacturaInterna(mensualidad, formato) {
+  const doc = await crearFacturaInternaPdf(mensualidad, formato);
+  doc.save(`factura-interna-${mensualidad.id}.pdf`);
 }
 
-async function cargarImagenDataUrl(origen) { const respuesta = await fetch(origen); const blob = await respuesta.blob(); return new Promise((resolve, reject) => { const lector = new FileReader(); lector.onload = () => resolve(lector.result); lector.onerror = reject; lector.readAsDataURL(blob); }); }
+async function descargarEstadoCuentaCompleta(mensualidad, cuenta, formato) {
+  const doc = await crearEstadoCuentaPdf(mensualidad, cuenta, formato);
+  doc.save(`estado-${mensualidad.alumno_nombre.replaceAll(' ', '-')}.pdf`);
+}

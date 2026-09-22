@@ -1,12 +1,13 @@
 .system-home {
-  background: #f2f4f7;
-  color: #20242b;
+  background: #eef1f5;
+  color: #1b2028;
   min-height: 100vh;
 }
 
 .system-home-header {
-  background: #171a20;
-  border-bottom: 4px solid #b11119;
+  background: #15181e;
+  border-bottom: 3px solid #b81720;
+  box-shadow: 0 10px 30px rgb(20 24 31 / 16%);
   color: #fff;
 }
 
@@ -15,9 +16,9 @@
   display: flex;
   justify-content: space-between;
   margin: 0 auto;
-  max-width: 1180px;
-  min-height: 88px;
-  padding: 14px 24px;
+  max-width: 1280px;
+  min-height: 104px;
+  padding: 16px 28px;
 }
 
 .system-home-header h1,
@@ -28,38 +29,55 @@
 .system-home .brand-lockup {
   align-items: center;
   display: flex;
-  gap: 14px;
+  gap: 17px;
   min-width: 0;
 }
 
 .system-home .club-logo {
   background: #050505;
-  border-radius: 6px;
-  height: 58px;
+  border: 1px solid #565b65;
+  border-radius: 7px;
+  box-shadow: 0 7px 18px rgb(0 0 0 / 28%);
+  height: 68px;
   object-fit: contain;
   padding: 4px;
-  width: 58px;
+  width: 68px;
 }
 
 .system-home-header h1 {
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 900;
 }
 
 .system-home-header p {
-  color: #c9cdd5;
+  color: #b8bec8;
   font-size: 13px;
-  margin-top: 3px;
+  margin-top: 5px;
 }
 
 .system-user {
   align-items: center;
   display: flex;
-  gap: 16px;
+  gap: 14px;
+}
+
+.system-user-avatar {
+  align-items: center;
+  background: #fff;
+  border: 2px solid #353b46;
+  border-radius: 50%;
+  color: #171a20;
+  display: inline-flex;
+  font-size: 15px;
+  font-weight: 900;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
 }
 
 .system-user div {
   display: grid;
-  gap: 2px;
+  gap: 3px;
   text-align: right;
 }
 
@@ -67,47 +85,57 @@
   font-size: 14px;
 }
 
-.system-user span {
-  color: #c9cdd5;
+.system-user div span {
+  color: #b8bec8;
   font-size: 12px;
 }
 
 .system-user button,
 .system-shortcuts button {
   background: transparent;
-  border: 1px solid #69707c;
+  border: 1px solid #606773;
   border-radius: 6px;
   color: inherit;
   cursor: pointer;
   font: inherit;
   font-size: 13px;
   font-weight: 800;
-  min-height: 40px;
-  padding: 9px 14px;
+  min-height: 42px;
+  padding: 9px 15px;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.system-user button:hover {
+  background: #252a32;
+  border-color: #8d949f;
 }
 
 .system-home-content {
   margin: 0 auto;
-  max-width: 1180px;
-  padding: 38px 24px;
+  max-width: 1280px;
+  padding: 44px 28px 56px;
 }
 
 .system-heading {
-  border-bottom: 1px solid #d9dde4;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
+  align-items: end;
+  border-bottom: 1px solid #cfd4dc;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 26px;
+  padding-bottom: 24px;
 }
 
 .system-eyebrow {
-  color: #a3131a !important;
-  font-size: 12px;
+  color: #aa161e !important;
+  font-size: 11px;
   font-weight: 900;
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 
 .system-heading h2 {
-  font-size: 28px;
-  margin: 0 0 8px;
+  font-size: 32px;
+  line-height: 1.15;
+  margin: 0 0 9px;
 }
 
 .system-heading p {
@@ -115,20 +143,62 @@
   margin: 0;
 }
 
+.system-heading-meta {
+  align-items: flex-end;
+  display: grid;
+  gap: 5px;
+  padding-bottom: 2px;
+  text-align: right;
+}
+
+.system-heading-meta span {
+  color: #717986;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.system-heading-meta strong {
+  color: #242a33;
+  font-size: 13px;
+}
+
 .module-grid {
   display: grid;
-  gap: 20px;
+  gap: 22px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .module-tile {
   background: #fff;
-  border: 1px solid #dfe3e9;
+  border: 1px solid #d8dde5;
   border-radius: 8px;
+  box-shadow: 0 12px 30px rgb(24 30 39 / 7%);
   display: grid;
   gap: 20px;
-  min-height: 390px;
-  padding: 26px;
+  min-height: 408px;
+  overflow: hidden;
+  padding: 30px;
+  position: relative;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.module-tile::before {
+  background: #b81720;
+  content: '';
+  height: 4px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.module-tile.school-module::before {
+  background: #18704f;
+}
+
+.module-tile:hover {
+  box-shadow: 0 18px 38px rgb(24 30 39 / 12%);
+  transform: translateY(-2px);
 }
 
 .module-tile-top {
@@ -140,14 +210,15 @@
 .module-code {
   align-items: center;
   background: #20242b;
-  border-radius: 6px;
+  border-radius: 7px;
+  box-shadow: 0 7px 16px rgb(32 36 43 / 18%);
   color: #fff;
   display: inline-flex;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 900;
-  height: 44px;
+  height: 50px;
   justify-content: center;
-  width: 44px;
+  width: 50px;
 }
 
 .school-module .module-code {
@@ -155,73 +226,134 @@
 }
 
 .module-status {
-  color: #19704d;
+  align-items: center;
+  color: #176044;
+  display: inline-flex;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
+  gap: 7px;
+}
+
+.module-status::before {
+  background: #23a26d;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgb(35 162 109 / 12%);
+  content: '';
+  height: 7px;
+  width: 7px;
 }
 
 .module-tile h3 {
-  font-size: 22px;
-  margin: 0 0 9px;
+  color: #171b22;
+  font-size: 24px;
+  margin: 0 0 10px;
 }
 
 .module-tile p {
-  color: #626975;
-  line-height: 1.55;
+  color: #5d6571;
+  line-height: 1.6;
   margin: 0;
 }
 
 .module-tile ul {
-  color: #444b55;
+  color: #353c46;
   display: grid;
-  gap: 8px;
-  list-style-position: inside;
+  gap: 11px;
+  list-style: none;
   margin: 0;
   padding: 0;
 }
 
+.module-tile li {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.module-tile li::before {
+  background: #b81720;
+  border-radius: 50%;
+  content: '';
+  height: 6px;
+  width: 6px;
+}
+
+.school-module li::before {
+  background: #18704f;
+}
+
 .module-tile > button {
   align-self: end;
-  background: #b11119;
+  background: #b81720;
   border: 0;
   border-radius: 6px;
   color: #fff;
   cursor: pointer;
   font: inherit;
   font-weight: 900;
-  min-height: 48px;
-  padding: 12px 18px;
+  min-height: 52px;
+  padding: 13px 20px;
+  position: relative;
+  text-align: left;
+  transition: background-color 160ms ease;
   width: 100%;
+}
+
+.module-tile > button::after {
+  content: '>';
+  font-size: 18px;
+  position: absolute;
+  right: 20px;
+  top: 14px;
 }
 
 .school-module > button {
   background: #176044;
 }
 
-.module-tile > button:hover {
-  filter: brightness(0.92);
+.tournament-module > button:hover {
+  background: #971219;
+}
+
+.school-module > button:hover {
+  background: #104d36;
 }
 
 .system-shortcuts {
   align-items: center;
   background: #fff;
-  border: 1px solid #dfe3e9;
-  border-radius: 8px;
+  border: 1px solid #d8dde5;
+  border-left: 4px solid #18704f;
+  border-radius: 7px;
+  box-shadow: 0 9px 24px rgb(24 30 39 / 5%);
   display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr auto auto;
-  margin-top: 20px;
+  gap: 17px;
+  grid-template-columns: auto 1fr auto auto;
+  margin-top: 22px;
   padding: 18px 22px;
+}
+
+.shortcut-code {
+  align-items: center;
+  background: #e9f4ef;
+  border-radius: 6px;
+  color: #176044;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
 }
 
 .system-shortcuts div {
   display: grid;
-  gap: 3px;
+  gap: 4px;
 }
 
-.system-shortcuts span {
-  color: #6a717d;
-  font-size: 12px;
+.system-shortcuts div span {
+  color: #707884;
+  font-size: 11px;
 }
 
 .system-shortcuts strong {
@@ -229,8 +361,12 @@
 }
 
 .system-shortcuts button {
-  border-color: #c8cdd5;
+  border-color: #c7cdd6;
   color: #252a32;
+}
+
+.system-shortcuts button:hover {
+  background: #f1f3f6;
 }
 
 .system-shortcuts a {
@@ -240,33 +376,53 @@
   text-decoration: none;
 }
 
+.system-shortcuts a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 760px) {
   .system-home-bar,
   .system-user,
-  .system-shortcuts {
+  .system-shortcuts,
+  .system-heading {
     align-items: stretch;
     grid-template-columns: 1fr;
   }
 
-  .system-home-bar {
+  .system-home-bar,
+  .system-heading {
     display: grid;
-    gap: 14px;
+    gap: 16px;
   }
 
   .system-user {
     display: grid;
+    grid-template-columns: auto 1fr;
   }
 
-  .system-user div {
+  .system-user button {
+    grid-column: 1 / -1;
+  }
+
+  .system-user div,
+  .system-heading-meta {
     text-align: left;
   }
 
+  .system-heading-meta {
+    align-items: start;
+  }
+
   .system-home-content {
-    padding: 24px 16px;
+    padding: 28px 16px 40px;
   }
 
   .system-home-header h1 {
-    font-size: 15px;
+    font-size: 16px;
+  }
+
+  .system-heading h2 {
+    font-size: 27px;
   }
 
   .module-grid {
@@ -275,5 +431,10 @@
 
   .module-tile {
     min-height: 0;
+    padding: 24px;
+  }
+
+  .system-shortcuts {
+    display: grid;
   }
 }

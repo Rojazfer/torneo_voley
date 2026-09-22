@@ -106,3 +106,9 @@ ACCESO DEL MODULO ESCUELA
 - El panel y las API administrativas de la Escuela son exclusivos para usuarios ADMIN.
 - Entrenadores y delegados no pueden ingresar ni consultar datos de alumnos, cobros o gestion interna.
 - El formulario publico de inscripcion permanece disponible para las familias.
+
+DOCUMENTOS DE COBRANZA
+- Recibos, facturas internas y estados de cuenta disponibles en media carta (215.9 x 139.7 mm).
+- Las facturas internas se identifican como documentos sin valor fiscal.
+- Impresion termica con ancho real de 80 mm o 58 mm y alto adaptado al contenido.
+- El formato se selecciona desde Mensualidades antes de generar el PDF.
