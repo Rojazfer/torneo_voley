@@ -14,6 +14,7 @@ ALCANCE IMPLEMENTADO
     - Datos personales, documentos, contacto y estado.
     - Responsable principal y contacto alternativo.
     - Cuenta de tutor vinculada para ingresar al portal familiar.
+    - Lista de inscritos en PDF agrupada y filtrable por categoria.
 
 [X] Entrenadores de la escuela
     - Ficha con nombres y apellidos reales, CI, telefono y correo.
@@ -47,6 +48,7 @@ ALCANCE IMPLEMENTADO
 [X] Comunicacion por WhatsApp
     - Plantillas para recordatorios, vencimientos, deudas, pagos y avisos.
     - Enlaces preparados de WhatsApp para envios manuales.
+    - Acceso directo desde mensualidades pendientes o vencidas.
     - Uso de WhatsApp normal mediante la aplicacion o WhatsApp Web.
     - Telefono del gerente: 78339748.
 
@@ -99,9 +101,10 @@ ESTADO DE VALIDACION
 
 [X] Migraciones creadas y aplicadas.
 [X] Django check sin errores.
-[X] 13 pruebas del modulo Escuela aprobadas.
+[X] 24 pruebas del backend aprobadas.
 [X] Frontend compila correctamente.
 [X] Lint sin errores del modulo.
+[X] Configuracion de produccion verificada para Render.
 ACCESO DEL MODULO ESCUELA
 - El panel y las API administrativas de la Escuela son exclusivos para usuarios ADMIN.
 - Entrenadores y delegados no pueden ingresar ni consultar datos de alumnos, cobros o gestion interna.

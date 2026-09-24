@@ -18,6 +18,10 @@ services:
         generateValue: true
       - key: DEBUG
         value: "False"
+      - key: PYTHON_VERSION
+        value: "3.14.3"
+      - key: SECURE_HSTS_SECONDS
+        value: "3600"
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
       - key: CORS_ALLOW_ALL_ORIGINS
